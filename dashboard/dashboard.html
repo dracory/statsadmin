@@ -1,0 +1,202 @@
+<style>
+.stats-dashboard .table-fixed { table-layout: fixed; }
+.stats-dashboard .table-fixed .col-path { width: 75%; word-break: break-all; }
+.stats-dashboard .table-fixed .col-count { width: 25%; }
+</style>
+<div id="stats-dashboard-app" class="stats-dashboard">
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <a class="nav-link active" href="__URL_DASHBOARD__">Dashboard</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="__URL_VISITORS__">Visitors</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="__URL_SESSIONS__">Sessions</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="__URL_SETTINGS__">Settings</a>
+        </li>
+    </ul>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Overview</h2>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm" :class="includeBots ? 'btn-outline-secondary' : 'btn-warning'" @click="toggleBots" :title="includeBots ? 'Click to exclude bots from stats' : 'Click to include bots in stats'">
+                <i class="bi bi-robot"></i> Bots: {{ includeBots ? 'ON' : 'OFF' }}
+            </button>
+            <button class="btn btn-outline-primary btn-sm" @click="exportCSV">
+                <i class="bi bi-download"></i> Export CSV
+            </button>
+            <select v-model="selectedPeriod" @change="loadDashboard" class="form-select" style="width: auto;">
+                <option v-for="opt in periodOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-bg-primary">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-uppercase">Total Visitors</h6>
+                    <h3 class="mb-0">{{ totalVisitors }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-success">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-uppercase">Unique Visitors</h6>
+                    <h3 class="mb-0">{{ uniqueVisitors }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-info">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-uppercase">Period</h6>
+                    <h3 class="mb-0">{{ periodLabel }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-warning">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-uppercase">Avg / Day</h6>
+                    <h3 class="mb-0">{{ avgPerDay }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Top Paths</div>
+                <div class="card-body">
+                    <table class="table table-sm table-striped table-fixed" v-if="topPaths.length">
+                        <thead><tr><th class="col-path">Path</th><th class="col-count text-end">Visits</th></tr></thead>
+                        <tbody>
+                            <tr v-for="item in topPaths" :key="item.label">
+                                <td class="col-path"><a :href="visitorsPathFilterUrl(item.label)" class="text-decoration-none text-break">{{ item.label }}</a></td>
+                                <td class="col-count text-end">{{ item.count }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p v-else class="text-muted mb-0">No data</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Top Countries</div>
+                <div class="card-body">
+                    <table class="table table-sm table-striped" v-if="topCountries.length">
+                        <thead><tr><th>Country</th><th class="text-end">Visits</th></tr></thead>
+                        <tbody>
+                            <tr v-for="item in topCountries" :key="item.label">
+                                <td><a :href="visitorsFilterUrl('country', item.label)" class="text-decoration-none"><span v-if="item.label && item.label !== '—'" class="fi" :class="'fi-' + item.label.toLowerCase()" :title="item.label_resolved || item.label"></span><span v-else>{{ item.label }}</span></a></td>
+                                <td class="text-end">{{ item.count }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p v-else class="text-muted mb-0">No data</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">Top Browsers</div>
+                <div class="card-body">
+                    <table class="table table-sm table-striped" v-if="topBrowsers.length">
+                        <thead><tr><th>Browser</th><th class="text-end">Visits</th></tr></thead>
+                        <tbody>
+                            <tr v-for="item in topBrowsers" :key="item.label">
+                                <td><a :href="visitorsFilterUrl('browser', item.label)" class="text-decoration-none">{{ item.label }}</a></td>
+                                <td class="text-end">{{ item.count }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p v-else class="text-muted mb-0">No data</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">Top Operating Systems</div>
+                <div class="card-body">
+                    <table class="table table-sm table-striped" v-if="topOS.length">
+                        <thead><tr><th>OS</th><th class="text-end">Visits</th></tr></thead>
+                        <tbody>
+                            <tr v-for="item in topOS" :key="item.label">
+                                <td><a :href="visitorsFilterUrl('os', item.label)" class="text-decoration-none">{{ item.label }}</a></td>
+                                <td class="text-end">{{ item.count }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p v-else class="text-muted mb-0">No data</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">Top Device Types</div>
+                <div class="card-body">
+                    <table class="table table-sm table-striped" v-if="topDeviceTypes.length">
+                        <thead><tr><th>Device</th><th class="text-end">Visits</th></tr></thead>
+                        <tbody>
+                            <tr v-for="item in topDeviceTypes" :key="item.label">
+                                <td><a :href="visitorsFilterUrl('device_type', item.label)" class="text-decoration-none">{{ item.label }}</a></td>
+                                <td class="text-end">{{ item.count }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p v-else class="text-muted mb-0">No data</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Recent Visitors</span>
+            <a href="__URL_VISITORS__" class="btn btn-sm btn-outline-primary">View All</a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive" v-if="recentVisitors.length">
+                <table class="table table-sm table-striped">
+                    <thead>
+                        <tr>
+                            <th>IP</th>
+                            <th>Country</th>
+                            <th>Path</th>
+                            <th>Browser</th>
+                            <th>OS</th>
+                            <th>Device</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="v in recentVisitors" :key="v.ip + v.created_at">
+                            <td>
+                                <a :href="ipDetailsUrl(v.ip)" class="text-decoration-none font-monospace">{{ v.ip }}</a>
+                                <span v-if="v.is_bot" class="badge bg-warning text-dark ms-1">Bot</span>
+                                <span v-if="v.is_threat" class="badge bg-danger ms-1">Threat</span>
+                            </td>
+                            <td><span v-if="v.country" class="fi" :class="'fi-' + v.country.toLowerCase()" :title="v.country_name || v.country"></span><span v-else>—</span></td>
+                            <td>{{ v.path }}</td>
+                            <td>{{ v.browser || '—' }}</td>
+                            <td>{{ v.os || '—' }}</td>
+                            <td>{{ v.device || '—' }}</td>
+                            <td>{{ v.created_at }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p v-else class="text-muted mb-0">No visitors in this period</p>
+        </div>
+    </div>
+</div>

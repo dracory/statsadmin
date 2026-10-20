@@ -1,0 +1,151 @@
+<style>.bot-reason-badge { cursor: pointer; }</style>
+<div id="ip-details-app" class="ip-details">
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <a class="nav-link" href="__URL_DASHBOARD__">Dashboard</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="__URL_VISITORS__">Visitors</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="__URL_SESSIONS__">Sessions</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="__URL_SETTINGS__">Settings</a>
+        </li>
+    </ul>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>IP Details</h2>
+        <div class="d-flex gap-2 align-items-center">
+            <button class="btn btn-sm" :class="includeBots ? 'btn-outline-secondary' : 'btn-warning'" @click="toggleBots" :title="includeBots ? 'Click to exclude bots from stats' : 'Click to include bots in stats'">
+                <i class="bi bi-robot"></i> Bots: {{ includeBots ? 'ON' : 'OFF' }}
+            </button>
+            <a href="__URL_VISITORS__" class="btn btn-sm btn-outline-secondary">Back to Visitors</a>
+        </div>
+    </div>
+
+    <div v-if="loading" class="text-center py-4">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Loading...</p>
+    </div>
+
+    <template v-else>
+        <!-- IP Summary Card -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <span class="font-monospace">{{ details.ip || '__IP__' }}</span>
+                    <span v-if="isBot" class="badge bg-warning text-dark ms-2 bot-reason-badge" @click.stop="showBotReasons">Bot</span>
+                    <span v-if="isThreat" class="badge bg-danger ms-2">Threat</span>
+                </h5>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted small">{{ visitCount }} visit(s)</span>
+                    <button v-if="!isBot" class="btn btn-sm btn-outline-warning" @click="confirmFlagBot" :disabled="flagging">
+                        <span v-if="flagging" class="spinner-border spinner-border-sm"></span>
+                        Flag as Bot
+                    </button>
+                    <span v-else class="badge bg-warning text-dark bot-reason-badge" @click.stop="showBotReasons">Bot</span>
+                    <button v-if="!isThreat" class="btn btn-sm btn-outline-danger" @click="confirmFlagThreat" :disabled="flaggingThreat">
+                        <span v-if="flaggingThreat" class="spinner-border spinner-border-sm"></span>
+                        Flag as Threat
+                    </button>
+                    <span v-else class="badge bg-danger">Threat</span>
+                    <button class="btn btn-sm btn-danger" @click="confirmRemoveEntries" :disabled="removing">
+                        <span v-if="removing" class="spinner-border spinner-border-sm"></span>
+                        Remove Entries
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 140px;">Country</th>
+                                    <td><span v-if="details.country" class="fi" :class="'fi-' + details.country.toLowerCase()" :title="details.country_name || details.country"></span><span v-else>—</span></td>
+                                </tr>
+                                <tr>
+                                    <th>Device</th>
+                                    <td>{{ details.device || '—' }} <span v-if="details.device_type" class="text-muted small">({{ details.device_type }})</span></td>
+                                </tr>
+                                <tr>
+                                    <th>Browser</th>
+                                    <td>{{ details.browser || '—' }} <span v-if="details.browser_version" class="text-muted small">{{ details.browser_version }}</span></td>
+                                </tr>
+                                <tr>
+                                    <th>OS</th>
+                                    <td>{{ details.os || '—' }} <span v-if="details.os_version" class="text-muted small">{{ details.os_version }}</span></td>
+                                </tr>
+                                <tr>
+                                    <th>First Seen</th>
+                                    <td>{{ details.first_seen || '—' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Last Seen</th>
+                                    <td>{{ details.last_seen || '—' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 140px;">Referrer</th>
+                                    <td class="small text-break">{{ details.referrer || '—' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Accept-Language</th>
+                                    <td class="small">{{ details.accept_language || '—' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Accept-Encoding</th>
+                                    <td class="small">{{ details.accept_encoding || '—' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Fingerprint</th>
+                                    <td class="small font-monospace">{{ details.fingerprint || '—' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>User Agent</th>
+                                    <td class="small text-break">{{ details.user_agent || '—' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Path History -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Path History ({{ paths.length }})</h5>
+            </div>
+            <div class="card-body">
+                <div v-if="paths.length === 0" class="text-muted">No paths found for this IP.</div>
+                <div v-else class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th style="width: 180px;">Timestamp</th>
+                                <th>Path</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(p, i) in paths" :key="i">
+                                <td class="small text-muted">{{ p.created_at }}</td>
+                                <td class="font-monospace small">
+                                    <a :href="pathUrl(p.path)" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-break">{{ p.path }}</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </template>
+    <br />
+</div>

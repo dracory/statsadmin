@@ -1,0 +1,263 @@
+<div id="stats-settings-app" class="stats-settings" v-cloak>
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <a class="nav-link" href="__URL_DASHBOARD__">Dashboard</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="__URL_VISITORS__">Visitors</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="__URL_SESSIONS__">Sessions</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="__URL_SETTINGS__">Settings</a>
+        </li>
+    </ul>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Settings</h2>
+    </div>
+
+    <div v-if="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ error }}
+        <button type="button" class="btn-close" aria-label="Close" @click="error = ''"></button>
+    </div>
+
+    <div v-if="success" class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ success }}
+        <button type="button" class="btn-close" aria-label="Close" @click="success = ''"></button>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-shield-exclamation"></i> Excluded IP Addresses</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">IP addresses in this list are excluded from visitor tracking. New visits from these IPs will not be recorded. You can also permanently delete existing visitor records for a given IP.</p>
+
+            <div class="d-flex gap-2 mb-3">
+                <input type="text" class="form-control" placeholder="e.g. 192.168.1.1" v-model="newIP" @keyup.enter="addIP">
+                <button class="btn btn-primary" type="button" @click="addIP" :disabled="loading || !newIP.trim()">
+                    <i class="bi bi-plus-circle"></i> Add IP
+                </button>
+            </div>
+
+            <div v-if="loading && !loaded" class="text-center py-3">
+                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                <span class="ms-2 text-muted small">Loading...</span>
+            </div>
+            <div v-else class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="w-50">IP Address</th>
+                            <th class="text-center">Delete Stats</th>
+                            <th class="text-center">Stop Excluding</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-if="ips.length === 0">
+                            <td colspan="3" class="text-center text-muted py-3">No excluded IPs. Add one above.</td>
+                        </tr>
+                        <tr v-for="item in ips" :key="item.ip">
+                            <td class="align-middle"><a :href="ipDetailsUrl(item.ip)" class="text-decoration-none font-monospace">{{ item.ip }}</a></td>
+                            <td class="align-middle text-nowrap">
+                                <button class="btn btn-sm btn-outline-danger" type="button" title="Delete all visitor records from this IP" @click="deleteVisitors(item.ip)" :disabled="loading">
+                                    <i class="bi bi-trash"></i> Delete Stats
+                                </button>
+                            </td>
+                            <td class="align-middle text-nowrap">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" title="Remove from exclusion list" @click="removeIP(item.ip)" :disabled="loading">
+                                    <i class="bi bi-x-circle"></i> Stop Excluding
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bot IPs Section -->
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-robot"></i> Bot IPs</h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-danger" @click="deleteBotEntries" :disabled="deletingBots">
+                    <span v-if="deletingBots" class="spinner-border spinner-border-sm me-1"></span>
+                    <i v-else class="bi bi-trash"></i> Delete Bot Entries
+                </button>
+                <button class="btn btn-sm btn-outline-danger" @click="deleteThreatEntries" :disabled="deletingThreats">
+                    <span v-if="deletingThreats" class="spinner-border spinner-border-sm me-1"></span>
+                    <i v-else class="bi bi-shield-exclamation"></i> Delete Threat Entries
+                </button>
+                <button class="btn btn-sm btn-outline-info" @click="identifyBots" :disabled="identifying">
+                    <span v-if="identifying" class="spinner-border spinner-border-sm me-1"></span>
+                    <i v-else class="bi bi-search"></i> Identify Bots
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">Manually maintained list of IP addresses classified as bots. Use this to flag known automated traffic that should be tracked separately from real visitors. Click "Identify Bots" to scan visitor logs for IPs that accessed crawler-related pages (robots.txt, sitemap.xml, ads.txt, etc.).</p>
+
+            <div class="d-flex gap-2 mb-3">
+                <input type="text" class="form-control" placeholder="e.g. 66.249.66.1" v-model="newBotIP" @keyup.enter="addBot">
+                <button class="btn btn-primary" type="button" @click="addBot" :disabled="botLoading || !newBotIP.trim()">
+                    <i class="bi bi-plus-circle"></i> Add Bot IP
+                </button>
+            </div>
+
+            <div v-if="botLoading && !botLoaded" class="text-center py-3">
+                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                <span class="ms-2 text-muted small">Loading...</span>
+            </div>
+            <div v-else class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>IP Address</th>
+                            <th class="text-end">Hits</th>
+                            <th>Last Seen</th>
+                            <th>Reasons</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-if="botIPs.length === 0">
+                            <td colspan="5" class="text-center text-muted py-3">No bot IPs found.</td>
+                        </tr>
+                        <tr v-for="item in botPageItems" :key="item.ip">
+                            <td class="align-middle font-monospace">
+                                <a :href="ipDetailsUrl(item.ip)" class="text-decoration-none">{{ item.ip }}</a>
+                            </td>
+                            <td class="align-middle text-end">{{ item.hits || 0 }}</td>
+                            <td class="align-middle small text-muted">{{ item.last_seen || '—' }}</td>
+                            <td class="align-middle small">
+                                <span v-if="item.reasons && item.reasons.length > 0">
+                                    <div v-for="(r, i) in item.reasons" :key="i" class="mb-1">
+                                        <span class="badge bg-light text-dark">{{ r.pattern }}</span>
+                                        <span class="text-muted ms-1">{{ r.hits }}x</span>
+                                        <span v-if="r.paths && r.paths.length" class="text-muted ms-1">— {{ r.paths.join(', ') }}</span>
+                                    </div>
+                                </span>
+                                <span v-else class="text-muted">—</span>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <button class="btn btn-sm btn-outline-danger" type="button" title="Permanently delete all visitor records from this IP" @click="deleteVisitors(item.ip)" :disabled="botLoading">
+                                    <i class="bi bi-trash"></i> Remove Entries
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" type="button" title="Remove from bot list" @click="removeBot(item.ip)" :disabled="botLoading">
+                                    <i class="bi bi-x-circle"></i> Remove
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div v-if="botIPs.length > botPerPage" class="d-flex justify-content-between align-items-center mt-3">
+                <span class="text-muted small">
+                    Showing {{ botPageStart + 1 }}–{{ botPageEnd }} of {{ botIPs.length }}
+                </span>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary" @click="botPrevPage" :disabled="botPage === 1">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <span class="btn btn-outline-secondary disabled">Page {{ botPage }} / {{ botTotalPages }}</span>
+                    <button class="btn btn-outline-secondary" @click="botNextPage" :disabled="botPage === botTotalPages">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Identified Bot Candidates -->
+    <div class="card mb-3" v-if="candidates.length > 0">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-search"></i> Identified Bot Candidates ({{ candidates.length }})</h5>
+            <button class="btn btn-sm btn-success" @click="addAllCandidates" :disabled="botLoading">
+                <i class="bi bi-plus-circle"></i> Add All New
+            </button>
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">Candidates with only one piece of evidence (path pattern <i>or</i> bot user agent). IPs with both were auto-added. Review and add the ones you want to classify as bots.</p>
+            <div class="table-responsive">
+                <table class="table table-sm table-striped table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>IP Address</th>
+                            <th class="text-end">Hits</th>
+                            <th>Reasons</th>
+                            <th>User Agent</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="c in candidates" :key="c.candidate_ip">
+                            <td class="align-middle font-monospace">
+                                <a :href="ipDetailsUrl(c.candidate_ip)" class="text-decoration-none">{{ c.candidate_ip }}</a>
+                                <span v-if="c.already_listed" class="badge bg-success ms-1">Listed</span>
+                            </td>
+                            <td class="align-middle text-end">{{ c.candidate_hits }}</td>
+                            <td class="align-middle small">
+                                <div v-for="(r, i) in c.reasons" :key="i" class="mb-1">
+                                    <span class="badge bg-light text-dark">{{ r.pattern }}</span>
+                                    <span class="text-muted ms-1">{{ r.hits }}x</span>
+                                    <span v-if="r.paths && r.paths.length" class="text-muted ms-1">— {{ r.paths.join(', ') }}</span>
+                                </div>
+                            </td>
+                            <td class="align-middle small text-break" style="max-width: 300px;">
+                                <div v-if="c.candidate_user_agents && c.candidate_user_agents.length">
+                                    <div v-for="(ua, i) in c.candidate_user_agents" :key="i" class="text-muted">{{ ua }}</div>
+                                </div>
+                                <span v-else class="text-muted">—</span>
+                            </td>
+                            <td class="text-end align-middle">
+                                <a :href="ipDetailsUrl(c.candidate_ip)" class="btn btn-sm btn-outline-secondary me-1" title="View IP details">
+                                    <i class="bi bi-info-circle"></i>
+                                </a>
+                                <button v-if="!c.already_listed" class="btn btn-sm btn-outline-success" @click="addCandidate(c.candidate_ip)" :disabled="botLoading">
+                                    <i class="bi bi-plus-circle"></i> Add
+                                </button>
+                                <span v-else class="text-muted small">Already added</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Maintenance Section -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-tools"></i> Maintenance</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">Permanently remove old visitor records to save database space.</p>
+
+            <div class="alert alert-light border d-flex align-items-center gap-2 mb-3" v-if="totalRecords !== null">
+                <i class="bi bi-database"></i>
+                <span class="small">
+                    <strong>{{ totalRecords.toLocaleString() }}</strong> visitor record(s) currently in the database.
+                    <span v-if="deleteOlderThanDate && olderCount !== null" class="ms-2">
+                        <span class="badge bg-warning text-dark">{{ olderCount.toLocaleString() }}</span> would be deleted.
+                    </span>
+                </span>
+            </div>
+
+            <div class="row align-items-end g-2">
+                <div class="col-md-4">
+                    <label class="form-label small">Delete entries older than</label>
+                    <input type="date" class="form-control" v-model="deleteOlderThanDate" @change="onDateChange">
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-danger w-100" type="button" @click="confirmDeleteOlderThan" :disabled="loading || !deleteOlderThanDate">
+                        <span v-if="deletingOlderThan" class="spinner-border spinner-border-sm me-1"></span>
+                        <i v-else class="bi bi-trash"></i> Delete Records
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

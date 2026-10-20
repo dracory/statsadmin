@@ -1,0 +1,30 @@
+package dashboard
+
+const (
+	actionLoadDashboard = "load-dashboard"
+	actionExportCSV     = "export-csv"
+
+	FieldTotalVisitors      = "total_visitors"
+	FieldUniqueVisitors     = "unique_visitors"
+	FieldPeriod             = "period"
+	FieldPeriodLabel        = "period_label"
+	FieldTopPaths           = "top_paths"
+	FieldTopCountries       = "top_countries"
+	FieldTopBrowsers        = "top_browsers"
+	FieldTopOS              = "top_os"
+	FieldTopDeviceTypes     = "top_device_types"
+	FieldRecentVisitors     = "recent_visitors"
+	FieldVisitorIP          = "ip"
+	FieldVisitorCountry     = "country"
+	FieldVisitorCountryName = "country_name"
+	FieldVisitorPath        = "path"
+	FieldVisitorBrowser     = "browser"
+	FieldVisitorOS          = "os"
+	FieldVisitorDevice      = "device"
+	FieldVisitorCreatedAt   = "created_at"
+	FieldIsBot              = "is_bot"
+	FieldIsThreat           = "is_threat"
+	FieldLabel              = "label"
+	FieldLabelResolved      = "label_resolved"
+	FieldCount              = "count"
+)

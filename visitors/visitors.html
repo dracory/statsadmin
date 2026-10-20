@@ -1,0 +1,156 @@
+<style>.bot-reason-badge { cursor: pointer; }</style>
+<div id="stats-visitors-app" class="stats-visitors">
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <a class="nav-link" href="__URL_DASHBOARD__">Dashboard</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="__URL_VISITORS__">Visitors</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="__URL_SESSIONS__">Sessions</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="__URL_SETTINGS__">Settings</a>
+        </li>
+    </ul>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Visitors</h2>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm" :class="includeBots ? 'btn-outline-secondary' : 'btn-warning'" @click="toggleBots" :title="includeBots ? 'Click to exclude bots from stats' : 'Click to include bots in stats'">
+                <i class="bi bi-robot"></i> Bots: {{ includeBots ? 'ON' : 'OFF' }}
+            </button>
+            <button class="btn btn-outline-primary btn-sm" @click="exportCSV">
+                <i class="bi bi-download"></i> Export CSV
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" @click="openFilterModal" v-if="conditions.length === 0">
+                <i class="bi bi-funnel"></i> Add Filters
+            </button>
+            <button class="btn btn-primary btn-sm" @click="openFilterModal" v-if="conditions.length > 0">
+                <i class="bi bi-funnel-fill"></i> Filters ({{ conditions.length }})
+            </button>
+            <button class="btn btn-outline-danger btn-sm" @click="clearConditions" v-if="conditions.length > 0">
+                Clear
+            </button>
+        </div>
+    </div>
+
+    <!-- Active conditions summary -->
+    <div class="alert alert-light border d-flex flex-wrap gap-2 align-items-center" v-if="conditions.length > 0">
+        <span class="text-muted small me-2">Active filters:</span>
+        <span v-for="(c, i) in conditions" :key="i" class="badge bg-secondary d-inline-flex align-items-center gap-1">
+            {{ fieldLabel(c.field) }} {{ opLabel(c.operator) }} {{ c.value }}
+            <button type="button" class="btn-close btn-close-white ms-1" style="font-size: 0.6em;" @click="removeCondition(i)"></button>
+        </span>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive" v-if="visitors.length">
+                <table class="table table-sm table-striped">
+                    <thead>
+                        <tr>
+                            <th>IP</th>
+                            <th>Country</th>
+                            <th>Path</th>
+                            <th>Browser</th>
+                            <th>OS</th>
+                            <th>Device</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="v in visitors" :key="v.id">
+                            <td>
+                                <a :href="ipDetailsUrl(v.ip)" class="text-decoration-none font-monospace">{{ v.ip }}</a>
+                                <span v-if="v.is_bot" class="badge bg-warning text-dark ms-1 bot-reason-badge" @click.prevent.stop="showBotReasons(v.ip)">Bot</span>
+                                <span v-if="v.is_threat" class="badge bg-danger ms-1">Threat</span>
+                            </td>
+                            <td><span v-if="v.country" class="fi" :class="'fi-' + v.country.toLowerCase()" :title="v.country_name || v.country"></span><span v-else>—</span></td>
+                            <td><a :href="pathUrl(v.path)" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-break">{{ v.path }}</a></td>
+                            <td>{{ v.browser || '—' }}</td>
+                            <td>{{ v.os || '—' }}</td>
+                            <td>{{ v.device_type || '—' }}</td>
+                            <td>{{ v.created_at }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p v-else class="text-muted">No visitors found</p>
+        </div>
+        <div class="card-footer d-flex justify-content-between align-items-center" v-if="total > 0">
+            <span class="small text-muted">Page {{ page }} of {{ totalPages }} — {{ total }} total</span>
+            <div>
+                <button class="btn btn-sm btn-outline-secondary me-1" :disabled="page <= 1" @click="prevPage">Previous</button>
+                <button class="btn btn-sm btn-outline-secondary" :disabled="page >= totalPages" @click="nextPage">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Modal -->
+    <template v-if="showFilterModal">
+        <div class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
+        <div class="modal fade show" style="display: block; z-index: 1050;">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Filter Conditions</h5>
+                        <button type="button" class="btn-close" @click="showFilterModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted small mb-3">
+                            Add multiple conditions to filter visitors. Conditions are combined with AND.
+                            Multiple conditions on the same field (e.g. two IP filters) are combined with OR.
+                        </p>
+
+                        <div v-for="(c, i) in modalConditions" :key="i" class="row g-2 mb-2 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label small">Field</label>
+                                <select v-model="c.field" class="form-select form-select-sm" @change="onFieldChange(c)">
+                                    <option value="">— Select field —</option>
+                                    <option v-for="opt in conditionOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2" v-if="c.field && getFieldOperators(c.field).length > 1">
+                                <label class="form-label small">Match</label>
+                                <select v-model="c.operator" class="form-select form-select-sm">
+                                    <option v-for="op in getFieldOperators(c.field)" :key="op" :value="op">{{ opLabel(op) }}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4" v-if="c.field">
+                                <label class="form-label small">Value</label>
+                                <input v-if="getFieldInputType(c.field) === 'text'" v-model="c.value" type="text" class="form-control form-control-sm" :placeholder="getFieldPlaceholder(c.field)">
+                                <input v-else-if="getFieldInputType(c.field) === 'date'" v-model="c.value" type="date" class="form-control form-control-sm">
+                                <select v-else-if="getFieldInputType(c.field) === 'select'" v-model="c.value" class="form-select form-select-sm">
+                                    <option value="">— Select —</option>
+                                    <template v-if="c.field === 'is_bot'">
+                                        <option value="yes">Yes</option>
+                                        <option value="no">No</option>
+                                    </template>
+                                    <template v-else>
+                                        <option v-for="dt in deviceTypes" :key="dt" :value="dt">{{ dt }}</option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="col-md-2" v-if="c.field">
+                                <button class="btn btn-outline-danger btn-sm w-100" @click="removeModalCondition(i)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-outline-primary btn-sm mt-2" @click="addModalCondition">
+                            <i class="bi bi-plus-circle"></i> Add Condition
+                        </button>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @click="showFilterModal = false">Cancel</button>
+                        <button class="btn btn-outline-danger" @click="clearModalConditions" v-if="modalConditions.length > 0">Clear All</button>
+                        <button class="btn btn-primary" @click="applyConditions">Apply Filters</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+</div>
