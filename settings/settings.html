@@ -78,6 +78,84 @@
         </div>
     </div>
 
+    <!-- Path Filtering Section -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-signpost-split"></i> Path Filtering</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="mb-2">Excluded Path Patterns</h6>
+                    <p class="text-muted small mb-3">Requests matching these patterns are not recorded. Entries without <code>*</code> act as prefixes (<code>/admin/</code> covers <code>/admin/users</code>); <code>*</code> matches any characters (e.g. <code>/api/*</code>, <code>/*.php</code>).</p>
+
+                    <div class="d-flex gap-2 mb-3">
+                        <input type="text" class="form-control" placeholder="e.g. /admin/" v-model="newExcludedPath" @keyup.enter="addExcludedPath">
+                        <button class="btn btn-primary" type="button" @click="addExcludedPath" :disabled="excludedPathLoading || !newExcludedPath.trim()">
+                            <i class="bi bi-plus-circle"></i> Add
+                        </button>
+                    </div>
+
+                    <div v-if="excludedPathLoading && !excludedPathLoaded" class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                        <span class="ms-2 text-muted small">Loading...</span>
+                    </div>
+                    <div v-else class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <tbody>
+                                <tr v-if="excludedPaths.length === 0">
+                                    <td class="text-center text-muted py-3">No excluded paths.</td>
+                                </tr>
+                                <tr v-for="item in excludedPaths" :key="item.path">
+                                    <td class="align-middle font-monospace">{{ item.path }}</td>
+                                    <td class="align-middle text-end text-nowrap">
+                                        <button class="btn btn-sm btn-outline-secondary" type="button" title="Remove from exclusion list" @click="removeExcludedPath(item.path)" :disabled="excludedPathLoading">
+                                            <i class="bi bi-x-circle"></i> Remove
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <h6 class="mb-2">Included Path Patterns</h6>
+                    <p class="text-muted small mb-3">Whitelist: when this list is non-empty, only matching paths are tracked. Supports the same prefix and <code>*</code> wildcard syntax. Leave empty to track all paths.</p>
+
+                    <div class="d-flex gap-2 mb-3">
+                        <input type="text" class="form-control" placeholder="e.g. /courses/" v-model="newIncludedPath" @keyup.enter="addIncludedPath">
+                        <button class="btn btn-primary" type="button" @click="addIncludedPath" :disabled="includedPathLoading || !newIncludedPath.trim()">
+                            <i class="bi bi-plus-circle"></i> Add
+                        </button>
+                    </div>
+
+                    <div v-if="includedPathLoading && !includedPathLoaded" class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                        <span class="ms-2 text-muted small">Loading...</span>
+                    </div>
+                    <div v-else class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <tbody>
+                                <tr v-if="includedPaths.length === 0">
+                                    <td class="text-center text-muted py-3">Empty — all paths tracked.</td>
+                                </tr>
+                                <tr v-for="item in includedPaths" :key="item.path">
+                                    <td class="align-middle font-monospace">{{ item.path }}</td>
+                                    <td class="align-middle text-end text-nowrap">
+                                        <button class="btn btn-sm btn-outline-secondary" type="button" title="Remove from inclusion list" @click="removeIncludedPath(item.path)" :disabled="includedPathLoading">
+                                            <i class="bi bi-x-circle"></i> Remove
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bot IPs Section -->
     <div class="card mb-3">
         <div class="card-header d-flex justify-content-between align-items-center">

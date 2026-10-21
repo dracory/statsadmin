@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/dracory/api"
-	"github.com/dracory/statsstore"
 	"github.com/dracory/statsadmin/shared"
+	"github.com/dracory/statsstore"
 )
 
 // reasonAgg tracks per-pattern evidence for a bot IP during aggregation.

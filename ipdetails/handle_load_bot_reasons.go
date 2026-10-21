@@ -69,9 +69,9 @@ func (controller *ipDetailsController) handleLoadBotReasons(w http.ResponseWrite
 
 	if len(ipVisitors) == 0 {
 		api.Respond(w, r, api.SuccessWithData("No visits found", map[string]any{
-			FieldIP:          ip,
-			FieldBotReasons:  []any{},
-			FieldVisitCount:  0,
+			FieldIP:         ip,
+			FieldBotReasons: []any{},
+			FieldVisitCount: 0,
 		}))
 		return ""
 	}
@@ -80,10 +80,10 @@ func (controller *ipDetailsController) handleLoadBotReasons(w http.ResponseWrite
 	isBot := shared.IsBotVisitor(ipVisitors[0])
 
 	api.Respond(w, r, api.SuccessWithData("Bot reasons loaded", map[string]any{
-		FieldIP:          ip,
-		FieldBotReasons:  botReasons,
-		FieldIsBot:       isBot,
-		FieldVisitCount:  len(ipVisitors),
+		FieldIP:         ip,
+		FieldBotReasons: botReasons,
+		FieldIsBot:      isBot,
+		FieldVisitCount: len(ipVisitors),
 	}))
 	return ""
 }

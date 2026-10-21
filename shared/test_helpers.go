@@ -48,14 +48,14 @@ type FakeLayout struct {
 	StyleURLs  []string
 }
 
-func (l *FakeLayout) SetTitle(title string)                       { l.Title = title }
-func (l *FakeLayout) SetScriptURLs(urls []string)                 { l.ScriptURLs = append([]string{}, urls...) }
-func (l *FakeLayout) SetScripts(scripts []string)                 { l.Scripts = append([]string{}, scripts...) }
-func (l *FakeLayout) SetStyleURLs(styles []string)                { l.StyleURLs = append([]string{}, styles...) }
-func (l *FakeLayout) SetStyles(styles []string)                   { l.Styles = append([]string{}, styles...) }
-func (l *FakeLayout) SetBody(body string)                         { l.Body = body }
+func (l *FakeLayout) SetTitle(title string)                             { l.Title = title }
+func (l *FakeLayout) SetScriptURLs(urls []string)                       { l.ScriptURLs = append([]string{}, urls...) }
+func (l *FakeLayout) SetScripts(scripts []string)                       { l.Scripts = append([]string{}, scripts...) }
+func (l *FakeLayout) SetStyleURLs(styles []string)                      { l.StyleURLs = append([]string{}, styles...) }
+func (l *FakeLayout) SetStyles(styles []string)                         { l.Styles = append([]string{}, styles...) }
+func (l *FakeLayout) SetBody(body string)                               { l.Body = body }
 func (l *FakeLayout) SetCountryNameByIso2(func(string) (string, error)) {}
-func (l *FakeLayout) Render(http.ResponseWriter, *http.Request) string { return l.Body }
+func (l *FakeLayout) Render(http.ResponseWriter, *http.Request) string  { return l.Body }
 
 // NewTestControllerOptions builds a ControllerOptions wired to a test store
 // and FakeLayout, suitable for controller tests.

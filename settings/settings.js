@@ -9,6 +9,16 @@ createApp({
         const error = ref('');
         const success = ref('');
 
+        // Path filtering state
+        const excludedPaths = ref([]);
+        const newExcludedPath = ref('');
+        const excludedPathLoading = ref(false);
+        const excludedPathLoaded = ref(false);
+        const includedPaths = ref([]);
+        const newIncludedPath = ref('');
+        const includedPathLoading = ref(false);
+        const includedPathLoaded = ref(false);
+
         // Bot IPs state
         const botIPs = ref([]);
         const newBotIP = ref('');
@@ -142,6 +152,172 @@ createApp({
                         error.value = 'Failed to delete visitors';
                     } finally {
                         loading.value = false;
+                    }
+                },
+                () => {}
+            );
+        };
+
+        // == Path Filtering ==
+
+        const loadExcludedPaths = async () => {
+            excludedPathLoading.value = true;
+            error.value = '';
+            try {
+                const response = await fetch(urlLoadExcludedPaths, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}),
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    excludedPaths.value = data.data.paths || [];
+                } else {
+                    error.value = data.message || 'Failed to load excluded paths';
+                }
+            } catch (e) {
+                error.value = 'Failed to load excluded paths';
+            } finally {
+                excludedPathLoading.value = false;
+                excludedPathLoaded.value = true;
+            }
+        };
+
+        const addExcludedPath = async () => {
+            if (!newExcludedPath.value.trim()) return;
+            excludedPathLoading.value = true;
+            error.value = '';
+            success.value = '';
+            try {
+                const response = await fetch(urlAddExcludedPath, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: newExcludedPath.value.trim() }),
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    newExcludedPath.value = '';
+                    success.value = 'Path added to exclusion list';
+                    await loadExcludedPaths();
+                } else {
+                    error.value = data.message || 'Failed to add path';
+                }
+            } catch (e) {
+                error.value = 'Failed to add path';
+            } finally {
+                excludedPathLoading.value = false;
+            }
+        };
+
+        const removeExcludedPath = (path) => {
+            Notiflix.Confirm.show(
+                'Stop Excluding',
+                'Remove "' + path + '" from the exclusion list? Future visits to matching paths will be tracked again.',
+                'Yes, remove it',
+                'No, cancel',
+                async () => {
+                    excludedPathLoading.value = true;
+                    error.value = '';
+                    success.value = '';
+                    try {
+                        const response = await fetch(urlRemoveExcludedPath, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ path: path }),
+                        });
+                        const data = await response.json();
+                        if (data.status === 'success') {
+                            success.value = 'Path removed from exclusion list';
+                            await loadExcludedPaths();
+                        } else {
+                            error.value = data.message || 'Failed to remove path';
+                        }
+                    } catch (e) {
+                        error.value = 'Failed to remove path';
+                    } finally {
+                        excludedPathLoading.value = false;
+                    }
+                },
+                () => {}
+            );
+        };
+
+        const loadIncludedPaths = async () => {
+            includedPathLoading.value = true;
+            error.value = '';
+            try {
+                const response = await fetch(urlLoadIncludedPaths, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}),
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    includedPaths.value = data.data.paths || [];
+                } else {
+                    error.value = data.message || 'Failed to load included paths';
+                }
+            } catch (e) {
+                error.value = 'Failed to load included paths';
+            } finally {
+                includedPathLoading.value = false;
+                includedPathLoaded.value = true;
+            }
+        };
+
+        const addIncludedPath = async () => {
+            if (!newIncludedPath.value.trim()) return;
+            includedPathLoading.value = true;
+            error.value = '';
+            success.value = '';
+            try {
+                const response = await fetch(urlAddIncludedPath, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: newIncludedPath.value.trim() }),
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    newIncludedPath.value = '';
+                    success.value = 'Path added to inclusion list';
+                    await loadIncludedPaths();
+                } else {
+                    error.value = data.message || 'Failed to add path';
+                }
+            } catch (e) {
+                error.value = 'Failed to add path';
+            } finally {
+                includedPathLoading.value = false;
+            }
+        };
+
+        const removeIncludedPath = (path) => {
+            Notiflix.Confirm.show(
+                'Stop Including',
+                'Remove "' + path + '" from the inclusion list?',
+                'Yes, remove it',
+                'No, cancel',
+                async () => {
+                    includedPathLoading.value = true;
+                    error.value = '';
+                    success.value = '';
+                    try {
+                        const response = await fetch(urlRemoveIncludedPath, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ path: path }),
+                        });
+                        const data = await response.json();
+                        if (data.status === 'success') {
+                            success.value = 'Path removed from inclusion list';
+                            await loadIncludedPaths();
+                        } else {
+                            error.value = data.message || 'Failed to remove path';
+                        }
+                    } catch (e) {
+                        error.value = 'Failed to remove path';
+                    } finally {
+                        includedPathLoading.value = false;
                     }
                 },
                 () => {}
@@ -490,6 +666,8 @@ createApp({
 
         onMounted(() => {
             loadIPs();
+            loadExcludedPaths();
+            loadIncludedPaths();
             loadBots();
             loadStats();
         });
@@ -505,6 +683,20 @@ createApp({
             addIP,
             removeIP,
             deleteVisitors,
+            excludedPaths,
+            newExcludedPath,
+            excludedPathLoading,
+            excludedPathLoaded,
+            loadExcludedPaths,
+            addExcludedPath,
+            removeExcludedPath,
+            includedPaths,
+            newIncludedPath,
+            includedPathLoading,
+            includedPathLoaded,
+            loadIncludedPaths,
+            addIncludedPath,
+            removeIncludedPath,
             botIPs,
             newBotIP,
             botLoading,

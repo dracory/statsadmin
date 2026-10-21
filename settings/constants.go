@@ -6,6 +6,17 @@ const (
 	actionRemoveIP       = "remove-ip"
 	actionDeleteVisitors = "delete-visitors"
 
+	// Excluded path prefix actions
+	actionLoadExcludedPaths  = "load-excluded-paths"
+	actionAddExcludedPath    = "add-excluded-path"
+	actionRemoveExcludedPath = "remove-excluded-path"
+
+	// Included path prefix actions (whitelist: when non-empty, only matching
+	// paths are tracked)
+	actionLoadIncludedPaths  = "load-included-paths"
+	actionAddIncludedPath    = "add-included-path"
+	actionRemoveIncludedPath = "remove-included-path"
+
 	// Bot IP actions
 	actionLoadBots      = "load-bots"
 	actionAddBot        = "add-bot"
@@ -17,6 +28,8 @@ const (
 
 	FieldIPs          = "ips"
 	FieldIP           = "ip"
+	FieldPaths        = "paths"
+	FieldPath         = "path"
 	FieldTotal        = "total"
 	FieldDeletedCount = "deleted_count"
 	FieldTotalRecords = "total_records"
@@ -57,14 +70,14 @@ const (
 	// for these file types are scanners probing for non-existent attack
 	// surface. Universal malicious patterns (.env, .git/, .svn/, .htpasswd,
 	// shell.php) come from statsstore.MaliciousPathPatterns().
-	botPagePatternPhp     = ".php"
-	botPagePatternPy      = ".py"
-	botPagePatternAsp     = ".asp"
-	botPagePatternAspx    = ".aspx"
-	botPagePatternJsp     = ".jsp"
-	botPagePatternCgi     = ".cgi"
-	botPagePatternPl      = ".pl"
-	botPagePatternRb      = ".rb"
+	botPagePatternPhp         = ".php"
+	botPagePatternPy          = ".py"
+	botPagePatternAsp         = ".asp"
+	botPagePatternAspx        = ".aspx"
+	botPagePatternJsp         = ".jsp"
+	botPagePatternCgi         = ".cgi"
+	botPagePatternPl          = ".pl"
+	botPagePatternRb          = ".rb"
 	botPagePatternWp          = "/wp"
 	botPagePatternWordPress   = "/wordpress"
 	botPagePatternWpAdmin     = "/wp-admin"

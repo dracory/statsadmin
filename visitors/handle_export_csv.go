@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/dracory/api"
-	"github.com/dracory/statsstore"
 	"github.com/dracory/statsadmin/shared"
+	"github.com/dracory/statsstore"
 )
 
 func (controller *visitorsController) handleExportCSV(w http.ResponseWriter, r *http.Request) string {

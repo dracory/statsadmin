@@ -102,6 +102,66 @@ func TestSettingsController_RemoveIP(t *testing.T) {
 	}
 }
 
+func TestSettingsController_ExcludedPaths(t *testing.T) {
+	opts, _, store := shared.NewTestControllerOptions(t)
+
+	resp := callAction(t, opts, http.MethodPost, actionAddExcludedPath, `{"path":"/admin/"}`)
+	if resp.Status != "success" {
+		t.Fatalf("expected success, got %s: %s", resp.Status, resp.Message)
+	}
+	paths, _ := store.ExcludedPathList(nil)
+	if len(paths) != 1 || paths[0] != "/admin/" {
+		t.Fatalf("expected [/admin/], got %v", paths)
+	}
+
+	resp = callAction(t, opts, http.MethodPost, actionLoadExcludedPaths, "")
+	if resp.Status != "success" {
+		t.Fatalf("expected success, got %s: %s", resp.Status, resp.Message)
+	}
+	if resp.Data["total"].(float64) != 1 {
+		t.Errorf("expected 1 path, got %v", resp.Data["total"])
+	}
+
+	resp = callAction(t, opts, http.MethodPost, actionRemoveExcludedPath, `{"path":"/admin/"}`)
+	if resp.Status != "success" {
+		t.Fatalf("expected success, got %s: %s", resp.Status, resp.Message)
+	}
+	paths, _ = store.ExcludedPathList(nil)
+	if len(paths) != 0 {
+		t.Errorf("expected 0 paths after removal, got %v", paths)
+	}
+}
+
+func TestSettingsController_IncludedPaths(t *testing.T) {
+	opts, _, store := shared.NewTestControllerOptions(t)
+
+	resp := callAction(t, opts, http.MethodPost, actionAddIncludedPath, `{"path":"/courses/"}`)
+	if resp.Status != "success" {
+		t.Fatalf("expected success, got %s: %s", resp.Status, resp.Message)
+	}
+	paths, _ := store.IncludedPathList(nil)
+	if len(paths) != 1 || paths[0] != "/courses/" {
+		t.Fatalf("expected [/courses/], got %v", paths)
+	}
+
+	resp = callAction(t, opts, http.MethodPost, actionLoadIncludedPaths, "")
+	if resp.Status != "success" {
+		t.Fatalf("expected success, got %s: %s", resp.Status, resp.Message)
+	}
+	if resp.Data["total"].(float64) != 1 {
+		t.Errorf("expected 1 path, got %v", resp.Data["total"])
+	}
+
+	resp = callAction(t, opts, http.MethodPost, actionRemoveIncludedPath, `{"path":"/courses/"}`)
+	if resp.Status != "success" {
+		t.Fatalf("expected success, got %s: %s", resp.Status, resp.Message)
+	}
+	paths, _ = store.IncludedPathList(nil)
+	if len(paths) != 0 {
+		t.Errorf("expected 0 paths after removal, got %v", paths)
+	}
+}
+
 func TestSettingsController_LoadBots(t *testing.T) {
 	opts, _, store := shared.NewTestControllerOptions(t)
 

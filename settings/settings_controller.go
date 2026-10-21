@@ -27,6 +27,18 @@ func (controller *settingsController) Handler(w http.ResponseWriter, r *http.Req
 		return controller.handleRemoveIP(w, r)
 	case actionDeleteVisitors:
 		return controller.handleDeleteVisitors(w, r)
+	case actionLoadExcludedPaths:
+		return controller.handleLoadExcludedPaths(w, r)
+	case actionAddExcludedPath:
+		return controller.handleAddExcludedPath(w, r)
+	case actionRemoveExcludedPath:
+		return controller.handleRemoveExcludedPath(w, r)
+	case actionLoadIncludedPaths:
+		return controller.handleLoadIncludedPaths(w, r)
+	case actionAddIncludedPath:
+		return controller.handleAddIncludedPath(w, r)
+	case actionRemoveIncludedPath:
+		return controller.handleRemoveIncludedPath(w, r)
 	case actionLoadBots:
 		return controller.handleLoadBots(w, r)
 	case actionAddBot:
