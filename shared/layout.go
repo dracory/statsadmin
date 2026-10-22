@@ -94,6 +94,7 @@ func webpageComplete(title, content string, options struct {
 	webpage.AddStyleURLs([]string{
 		cdn.BootstrapCss_5_3_3(),
 		"https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css",
+		FlagIconsCSS,
 	})
 	webpage.AddStyleURLs(options.StyleURLs)
 	webpage.AddScriptURLs([]string{

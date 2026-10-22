@@ -28,6 +28,17 @@ func TestDashboardController_RendersPage(t *testing.T) {
 	if !strings.Contains(layout.Body, "vue.global.prod.js") {
 		t.Error("should include Vue.js CDN")
 	}
+
+	hasFlagIcons := false
+	for _, styleURL := range layout.StyleURLs {
+		if styleURL == shared.FlagIconsCSS {
+			hasFlagIcons = true
+			break
+		}
+	}
+	if !hasFlagIcons {
+		t.Errorf("layout.StyleURLs should contain %s, got: %v", shared.FlagIconsCSS, layout.StyleURLs)
+	}
 }
 
 func TestDashboardController_LoadDashboard_GetMethod(t *testing.T) {

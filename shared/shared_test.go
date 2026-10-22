@@ -157,6 +157,19 @@ func TestCountryNameResolver_UnknownCodeEmptyReturn(t *testing.T) {
 	}
 }
 
+func TestLayout_IncludesFlagIconsCSS(t *testing.T) {
+	html := Layout(nil, nil, "Test Title", "<div>Content</div>", struct {
+		Styles     []string
+		StyleURLs  []string
+		Scripts    []string
+		ScriptURLs []string
+	}{})
+
+	if !containsStr(html, FlagIconsCSS) {
+		t.Errorf("expected default layout HTML to contain FlagIconsCSS %s, got: %s", FlagIconsCSS, html)
+	}
+}
+
 func TestControllerOptions_CountryName(t *testing.T) {
 	t.Run("nil callback", func(t *testing.T) {
 		opts := ControllerOptions{}

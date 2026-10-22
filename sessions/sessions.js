@@ -1,5 +1,14 @@
 const { createApp, ref, computed, onMounted } = Vue;
 
+(function ensureFlagIcons() {
+    if (!document.querySelector('link[href*="flag-icon"]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css';
+        document.head.appendChild(link);
+    }
+})();
+
 // esc escapes a string for safe insertion into HTML innerHTML.
 // Prevents XSS when displaying user-controlled data (paths, patterns) in
 // Notiflix.Report dialogs.
