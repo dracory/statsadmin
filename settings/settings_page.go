@@ -115,6 +115,7 @@ func (controller *settingsController) renderPage(w http.ResponseWriter, r *http.
 	controller.opts.Layout.SetBody(content.ToHTML())
 	controller.opts.Layout.SetScriptURLs([]string{cdn.Notiflix_3_2_8()})
 	controller.opts.Layout.SetScripts([]string{})
+	controller.opts.Layout.SetStyleURLs([]string{shared.FlagIconsCSS})
 	controller.opts.Layout.SetStyles([]string{cdn.Notiflix_3_2_8_CSS()})
 
 	return controller.opts.Layout.Render(w, r)

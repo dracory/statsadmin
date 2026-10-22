@@ -38,3 +38,6 @@ const (
 	DefaultPageSize = 25
 	MaxPageSize     = 100
 )
+
+// Flag Icons CDN
+const FlagIconsCSS = "https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css"
