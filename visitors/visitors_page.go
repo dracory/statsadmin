@@ -50,6 +50,7 @@ func (controller *visitorsController) renderPage(w http.ResponseWriter, r *http.
 	html = strings.ReplaceAll(html, "__URL_SETTINGS__", urlSettings)
 	html = strings.ReplaceAll(html, "urlIPDetailsBase", "'"+urlIPDetailsBase+"'")
 	js := strings.ReplaceAll(visitorsJS, "urlLoadVisitors", "'"+urlLoadVisitors+"'")
+	js = strings.ReplaceAll(js, "urlVisitorsBase", "'"+urlVisitors+"'")
 	js = strings.ReplaceAll(js, "urlIPDetailsBase", "'"+urlIPDetailsBase+"'")
 
 	vueCDN := hb.Script("").Src(cdn.VueJs_3_5_32())

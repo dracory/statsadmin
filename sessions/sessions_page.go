@@ -50,6 +50,7 @@ func (controller *sessionsController) renderPage(w http.ResponseWriter, r *http.
 	html = strings.ReplaceAll(html, "__URL_SESSIONS__", urlSessions)
 	html = strings.ReplaceAll(html, "__URL_SETTINGS__", urlSettings)
 	js := strings.ReplaceAll(sessionsJS, "urlLoadSessions", "'"+urlLoadSessions+"'")
+	js = strings.ReplaceAll(js, "urlSessionsBase", "'"+urlSessions+"'")
 	js = strings.ReplaceAll(js, "urlIPDetailsBase", "'"+urlIPDetailsBase+"'")
 
 	vueCDN := hb.Script("").Src(cdn.VueJs_3_5_32())

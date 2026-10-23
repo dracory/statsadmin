@@ -130,7 +130,7 @@ func ComputeBotReasons(visitors []statsstore.VisitorInterface, extraPathPatterns
 		// the identify-bots scan in handleIdentifyBots.
 		pathLower := strings.ToLower(path)
 		for i, patternLower := range extraLower {
-			if strings.Contains(pathLower, patternLower) {
+			if i < len(extraPathPatterns) && strings.Contains(pathLower, patternLower) {
 				addReason(extraPathPatterns[i], path)
 			}
 		}
