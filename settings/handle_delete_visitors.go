@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/netip"
+	"strings"
 
 	"github.com/dracory/api"
 )
@@ -30,19 +32,24 @@ func (controller *settingsController) handleDeleteVisitors(w http.ResponseWriter
 		return ""
 	}
 
-	if reqBody.IP != "" {
-		count, err := store.VisitorDeleteByIP(r.Context(), reqBody.IP)
+	if ip := strings.TrimSpace(reqBody.IP); ip != "" {
+		if _, err := netip.ParseAddr(ip); err != nil {
+			api.Respond(w, r, api.Error("Invalid IP address"))
+			return ""
+		}
+
+		count, err := store.VisitorDeleteByIP(r.Context(), ip)
 		if err != nil {
-			slog.Error("statsadmin settings: failed to delete visitors by IP", "ip", reqBody.IP, "error", err)
-			api.Respond(w, r, api.Error(err.Error()))
+			slog.Error("statsadmin settings: failed to delete visitors by IP", "ip", ip, "error", err)
+			api.Respond(w, r, api.Error("Failed to delete visitors by IP: "+err.Error()))
 			return ""
 		}
 
 		api.Respond(w, r, api.SuccessWithData(
-			fmt.Sprintf("Deleted %d visitor record(s) for IP %s", count, reqBody.IP),
+			fmt.Sprintf("Deleted %d visitor record(s) for IP %s", count, ip),
 			map[string]any{
 				FieldDeletedCount: count,
-				FieldIP:           reqBody.IP,
+				FieldIP:           ip,
 			},
 		))
 		return ""
@@ -52,7 +59,7 @@ func (controller *settingsController) handleDeleteVisitors(w http.ResponseWriter
 		count, err := store.VisitorDeleteOlderThan(r.Context(), reqBody.OlderThan)
 		if err != nil {
 			slog.Error("statsadmin settings: failed to delete visitors older than", "older_than", reqBody.OlderThan, "error", err)
-			api.Respond(w, r, api.Error(err.Error()))
+			api.Respond(w, r, api.Error("Failed to delete visitors: "+err.Error()))
 			return ""
 		}
 

@@ -37,7 +37,7 @@ func (controller *settingsController) handleRemoveIncludedPath(w http.ResponseWr
 
 	if err := store.IncludedPathRemove(r.Context(), path); err != nil {
 		slog.Error("statsadmin settings: failed to remove included path", "path", path, "error", err)
-		api.Respond(w, r, api.Error("Failed to remove path"))
+		api.Respond(w, r, api.Error("Failed to remove path: "+err.Error()))
 		return ""
 	}
 

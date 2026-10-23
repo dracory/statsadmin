@@ -8,10 +8,16 @@ import (
 	"strconv"
 
 	"github.com/dracory/api"
+	"github.com/dracory/statsadmin/shared"
 	"github.com/dracory/statsstore"
 )
 
 func (controller *sessionsController) handleExportCSV(w http.ResponseWriter, r *http.Request) string {
+	if r.Method != http.MethodPost {
+		api.Respond(w, r, api.Error("Method not allowed"))
+		return ""
+	}
+
 	store := controller.opts.Store
 	if store == nil {
 		api.Respond(w, r, api.Error("Stats store not available"))
@@ -34,7 +40,7 @@ func (controller *sessionsController) handleExportCSV(w http.ResponseWriter, r *
 	visitors, err := store.VisitorList(ctx, query)
 	if err != nil {
 		slog.Error("statsadmin sessions: failed to load visitors for export", "error", err)
-		api.Respond(w, r, api.Error("Failed to load data for export"))
+		api.Respond(w, r, api.Error("Failed to load data for export: "+err.Error()))
 		return ""
 	}
 
@@ -53,16 +59,16 @@ func (controller *sessionsController) handleExportCSV(w http.ResponseWriter, r *
 
 	for _, s := range sessions {
 		_ = writer.Write([]string{
-			s.IP,
-			s.Country,
-			s.CountryName,
+			shared.CSVSafe(s.IP),
+			shared.CSVSafe(s.Country),
+			shared.CSVSafe(s.CountryName),
 			strconv.Itoa(s.VisitCount),
-			s.FirstSeen,
-			s.LastSeen,
-			s.Browser,
-			s.OS,
-			s.Device,
-			s.DeviceType,
+			shared.CSVSafe(s.FirstSeen),
+			shared.CSVSafe(s.LastSeen),
+			shared.CSVSafe(s.Browser),
+			shared.CSVSafe(s.OS),
+			shared.CSVSafe(s.Device),
+			shared.CSVSafe(s.DeviceType),
 			strconv.FormatBool(s.IsBot),
 			strconv.FormatBool(s.IsThreat),
 		})

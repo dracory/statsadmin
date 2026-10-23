@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"net/netip"
 	"strings"
 
 	"github.com/dracory/statsadmin/shared"
@@ -30,6 +31,10 @@ func (controller *settingsController) handleAddBot(w http.ResponseWriter, r *htt
 		api.Respond(w, r, api.Error("IP address is required"))
 		return ""
 	}
+	if _, err := netip.ParseAddr(ip); err != nil {
+		api.Respond(w, r, api.Error("Invalid IP address"))
+		return ""
+	}
 
 	store := controller.opts.Store
 	if store == nil {
@@ -41,7 +46,7 @@ func (controller *settingsController) handleAddBot(w http.ResponseWriter, r *htt
 	count, err := shared.FlagIPVisitorsAsBot(r.Context(), store, ip)
 	if err != nil {
 		slog.Error("statsadmin settings: failed to flag IP as bot", "ip", ip, "error", err)
-		api.Respond(w, r, api.Error(err.Error()))
+		api.Respond(w, r, api.Error("Failed to flag IP as bot: "+err.Error()))
 		return ""
 	}
 	if count == 0 {

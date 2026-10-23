@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"net/netip"
+	"strings"
 
 	"github.com/dracory/api"
 )
@@ -28,14 +30,19 @@ func (controller *settingsController) handleAddIP(w http.ResponseWriter, r *http
 		return ""
 	}
 
-	if reqBody.IP == "" {
+	ip := strings.TrimSpace(reqBody.IP)
+	if ip == "" {
 		api.Respond(w, r, api.Error("IP address is required"))
 		return ""
 	}
+	if _, err := netip.ParseAddr(ip); err != nil {
+		api.Respond(w, r, api.Error("Invalid IP address"))
+		return ""
+	}
 
-	if err := store.ExcludedIPAdd(r.Context(), reqBody.IP); err != nil {
-		slog.Error("statsadmin settings: failed to add excluded IP", "ip", reqBody.IP, "error", err)
-		api.Respond(w, r, api.Error("Failed to add IP"))
+	if err := store.ExcludedIPAdd(r.Context(), ip); err != nil {
+		slog.Error("statsadmin settings: failed to add excluded IP", "ip", ip, "error", err)
+		api.Respond(w, r, api.Error("Failed to add IP: "+err.Error()))
 		return ""
 	}
 

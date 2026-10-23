@@ -64,7 +64,7 @@ func (controller *visitorsController) handleLoadVisitors(w http.ResponseWriter, 
 	visitors, err := store.VisitorList(ctx, query)
 	if err != nil {
 		slog.Error("statsadmin visitors: failed to load visitors", "error", err)
-		api.Respond(w, r, api.Error("Failed to load visitors"))
+		api.Respond(w, r, api.Error("Failed to load visitors: "+err.Error()))
 		return ""
 	}
 

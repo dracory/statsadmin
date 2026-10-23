@@ -91,7 +91,7 @@ func (controller *sessionsController) handleLoadSessions(w http.ResponseWriter, 
 	visitors, err := store.VisitorList(ctx, query)
 	if err != nil {
 		slog.Error("statsadmin sessions: failed to load visitors", "error", err)
-		api.Respond(w, r, api.Error("Failed to load sessions"))
+		api.Respond(w, r, api.Error("Failed to load sessions: "+err.Error()))
 		return ""
 	}
 

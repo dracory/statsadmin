@@ -79,7 +79,7 @@ createApp({
                 const url = urlIPDetailsBase + '&action=load-bot-reasons&ip=' + encodeURIComponent(ip);
                 const response = await fetch(url, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify({ ip: ip }),
                 });
                 const data = await response.json();
@@ -174,7 +174,7 @@ createApp({
             try {
                 const response = await fetch(urlSessionsBase + '&action=export-csv', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify({ conditions: conditions.value }),
                 });
                 const blob = await response.blob();
@@ -194,7 +194,7 @@ createApp({
             try {
                 const response = await fetch(urlLoadSessions, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify({
                         page: page.value,
                         per_page: perPage.value,

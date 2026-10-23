@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"net/netip"
+	"strings"
 
 	"github.com/dracory/api"
 )
@@ -28,14 +30,19 @@ func (controller *settingsController) handleRemoveIP(w http.ResponseWriter, r *h
 		return ""
 	}
 
-	if reqBody.IP == "" {
+	ip := strings.TrimSpace(reqBody.IP)
+	if ip == "" {
 		api.Respond(w, r, api.Error("IP address is required"))
 		return ""
 	}
+	if _, err := netip.ParseAddr(ip); err != nil {
+		api.Respond(w, r, api.Error("Invalid IP address"))
+		return ""
+	}
 
-	if err := store.ExcludedIPRemove(r.Context(), reqBody.IP); err != nil {
-		slog.Error("statsadmin settings: failed to remove excluded IP", "ip", reqBody.IP, "error", err)
-		api.Respond(w, r, api.Error("Failed to remove IP"))
+	if err := store.ExcludedIPRemove(r.Context(), ip); err != nil {
+		slog.Error("statsadmin settings: failed to remove excluded IP", "ip", ip, "error", err)
+		api.Respond(w, r, api.Error("Failed to remove IP: "+err.Error()))
 		return ""
 	}
 

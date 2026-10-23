@@ -20,7 +20,7 @@ func (controller *settingsController) handleLoadIPs(w http.ResponseWriter, r *ht
 
 	ips, err := store.ExcludedIPList(r.Context())
 	if err != nil {
-		api.Respond(w, r, api.Error(err.Error()))
+		api.Respond(w, r, api.Error("Failed to load excluded IPs: "+err.Error()))
 		return ""
 	}
 

@@ -2,7 +2,9 @@ package statsadmin
 
 import (
 	"net/http"
+	"strings"
 
+	"github.com/dracory/api"
 	"github.com/dracory/req"
 	"github.com/dracory/statsadmin/dashboard"
 	"github.com/dracory/statsadmin/ipdetails"
@@ -17,6 +19,30 @@ import (
 // ResponseWriter.
 func Handler(opts shared.ControllerOptions, w http.ResponseWriter, r *http.Request) {
 	controller := req.GetStringTrimmed(r, shared.ParamController)
+	action := req.GetStringTrimmed(r, shared.ParamAction)
+
+	// Baseline security headers for every admin response (pages, AJAX, CSV).
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Cache-Control", "no-store")
+
+	// Action/AJAX endpoints are gated centrally: they read PII and mutate or
+	// export data, so every current and future action requires authentication
+	// (when AuthUserID is configured), a POST method, and the X-Requested-With
+	// header as a CSRF countermeasure (a cross-origin form or simple fetch
+	// cannot set a custom header without a CORS preflight).
+	// Page renders (empty action) are exempt — each controller's renderPage
+	// enforces its own auth check and redirect.
+	if action != "" {
+		if opts.AuthUserID != nil && opts.AuthUserID(r) == "" {
+			api.RespondWithStatusCode(w, r, api.Unauthenticated("Authentication required"), http.StatusUnauthorized)
+			return
+		}
+		if r.Method != http.MethodPost ||
+			!strings.EqualFold(r.Header.Get("X-Requested-With"), "XMLHttpRequest") {
+			api.RespondWithStatusCode(w, r, api.Forbidden("Action endpoints require POST with X-Requested-With: XMLHttpRequest"), http.StatusForbidden)
+			return
+		}
+	}
 
 	var body string
 	switch controller {

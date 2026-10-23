@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"net/netip"
 	"strings"
 
 	"github.com/dracory/statsadmin/shared"
@@ -44,27 +45,23 @@ func (controller *ipDetailsController) handleLoadBotReasons(w http.ResponseWrite
 		api.Respond(w, r, api.Error("IP address is required"))
 		return ""
 	}
+	if _, err := netip.ParseAddr(ip); err != nil {
+		api.Respond(w, r, api.Error("Invalid IP address"))
+		return ""
+	}
 
 	ctx := r.Context()
 
-	// Fetch all visitors for this IP. The store query supports IP filtering
-	// via SetIPIn, but not all stores implement it; use the same broad-fetch
-	// + in-memory filter approach as handleLoadPaths for consistency.
-	visitors, err := store.VisitorList(ctx, statsstore.VisitorQuery().
+	// Fetch all visitors for this IP (filtered in SQL via SetIPIn).
+	ipVisitors, err := store.VisitorList(ctx, statsstore.VisitorQuery().
+		SetIPIn([]string{ip}).
 		SetOrderBy("created_at").
 		SetSortOrder("DESC").
 		SetLimit(10000))
 	if err != nil {
 		slog.Error("ipdetails: failed to load visitors for bot reasons", "error", err)
-		api.Respond(w, r, api.Error("Failed to load visitor data"))
+		api.Respond(w, r, api.Error("Failed to load visitor data: "+err.Error()))
 		return ""
-	}
-
-	var ipVisitors []statsstore.VisitorInterface
-	for _, v := range visitors {
-		if v.GetIpAddress() == ip {
-			ipVisitors = append(ipVisitors, v)
-		}
 	}
 
 	if len(ipVisitors) == 0 {

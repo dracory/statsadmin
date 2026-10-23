@@ -29,7 +29,7 @@ func (controller *settingsController) handleDeleteBots(w http.ResponseWriter, r 
 		SetLimit(100000))
 	if err != nil {
 		slog.Error("statsadmin settings: failed to load bot visitors", "error", err)
-		api.Respond(w, r, api.Error("Failed to load bot visitors"))
+		api.Respond(w, r, api.Error("Failed to load bot visitors: "+err.Error()))
 		return ""
 	}
 
@@ -64,7 +64,7 @@ func (controller *settingsController) handleDeleteThreats(w http.ResponseWriter,
 		SetLimit(100000))
 	if err != nil {
 		slog.Error("statsadmin settings: failed to load threat visitors", "error", err)
-		api.Respond(w, r, api.Error("Failed to load threat visitors"))
+		api.Respond(w, r, api.Error("Failed to load threat visitors: "+err.Error()))
 		return ""
 	}
 
@@ -80,16 +80,26 @@ func (controller *settingsController) handleDeleteThreats(w http.ResponseWriter,
 	return ""
 }
 
-// deleteVisitorsByID deletes each visitor by ID and returns (deleted, failed) counts.
+// deleteVisitorsByID deletes the given visitors in batched DELETEs (500 IDs
+// per statement) and returns (deleted, failed) counts.
 func deleteVisitorsByID(ctx context.Context, store statsstore.StoreInterface, visitors []statsstore.VisitorInterface) (int, int) {
-	var deleted, failed int
+	const batchSize = 500
+
+	ids := make([]string, 0, len(visitors))
 	for _, v := range visitors {
-		if err := store.VisitorDeleteByID(ctx, v.GetID()); err != nil {
-			failed++
-			slog.Error("statsadmin settings: failed to delete visitor", "id", v.GetID(), "error", err)
+		ids = append(ids, v.GetID())
+	}
+
+	var deleted, failed int
+	for i := 0; i < len(ids); i += batchSize {
+		end := min(i+batchSize, len(ids))
+		n, err := store.VisitorDeleteByIDs(ctx, ids[i:end])
+		if err != nil {
+			failed += end - i
+			slog.Error("statsadmin settings: failed to delete visitor batch", "count", end-i, "error", err)
 			continue
 		}
-		deleted++
+		deleted += int(n)
 	}
 	return deleted, failed
 }

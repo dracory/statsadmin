@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/netip"
 	"strings"
 
 	"github.com/dracory/api"
@@ -38,11 +39,15 @@ func (controller *ipDetailsController) handleRemoveEntries(w http.ResponseWriter
 		api.Respond(w, r, api.Error("IP address is required"))
 		return ""
 	}
+	if _, err := netip.ParseAddr(ip); err != nil {
+		api.Respond(w, r, api.Error("Invalid IP address"))
+		return ""
+	}
 
 	count, err := store.VisitorDeleteByIP(r.Context(), ip)
 	if err != nil {
 		slog.Error("statsadmin ipdetails: failed to remove entries by IP", "ip", ip, "error", err)
-		api.Respond(w, r, api.Error(err.Error()))
+		api.Respond(w, r, api.Error("Failed to remove entries: "+err.Error()))
 		return ""
 	}
 

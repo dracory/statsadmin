@@ -7,14 +7,14 @@ require (
 	github.com/dracory/cdn v1.13.0
 	github.com/dracory/hb v1.88.0
 	github.com/dracory/req v0.1.0
-	github.com/dromara/carbon/v2 v2.6.18
-	modernc.org/sqlite v1.60.1
+	github.com/dromara/carbon/v2 v2.7.0
+	modernc.org/sqlite v1.61.0
 )
 
 require (
 	github.com/LumenResearch/uasurfer v0.3.1 // indirect
 	github.com/dracory/neat v0.57.0 // indirect
-	github.com/dracory/statsstore v1.32.1 // indirect
+	github.com/dracory/statsstore v1.32.3 // indirect
 	github.com/dracory/str v0.19.0 // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -28,7 +28,7 @@ require (
 	golang.org/x/net v0.61.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
-	modernc.org/libc v1.78.0 // indirect
+	modernc.org/libc v1.79.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
 )

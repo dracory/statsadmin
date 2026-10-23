@@ -48,7 +48,7 @@ createApp({
             try {
                 const response = await fetch(urlLoadIPs, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify({}),
                 });
                 const data = await response.json();
@@ -73,7 +73,7 @@ createApp({
             try {
                 const response = await fetch(urlAddIP, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify({ ip: newIP.value.trim() }),
                 });
                 const data = await response.json();
@@ -104,7 +104,7 @@ createApp({
                     try {
                         const response = await fetch(urlRemoveIP, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                             body: JSON.stringify({ ip: ip }),
                         });
                         const data = await response.json();
@@ -137,7 +137,7 @@ createApp({
                     try {
                         const response = await fetch(urlDeleteVisitors, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                             body: JSON.stringify({ ip: ip }),
                         });
                         const data = await response.json();
@@ -166,7 +166,7 @@ createApp({
             try {
                 const response = await fetch(urlLoadExcludedPaths, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify({}),
                 });
                 const data = await response.json();
@@ -191,7 +191,7 @@ createApp({
             try {
                 const response = await fetch(urlAddExcludedPath, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify({ path: newExcludedPath.value.trim() }),
                 });
                 const data = await response.json();
@@ -222,7 +222,7 @@ createApp({
                     try {
                         const response = await fetch(urlRemoveExcludedPath, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                             body: JSON.stringify({ path: path }),
                         });
                         const data = await response.json();
@@ -248,7 +248,7 @@ createApp({
             try {
                 const response = await fetch(urlLoadIncludedPaths, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify({}),
                 });
                 const data = await response.json();
@@ -273,7 +273,7 @@ createApp({
             try {
                 const response = await fetch(urlAddIncludedPath, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify({ path: newIncludedPath.value.trim() }),
                 });
                 const data = await response.json();
@@ -304,7 +304,7 @@ createApp({
                     try {
                         const response = await fetch(urlRemoveIncludedPath, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                             body: JSON.stringify({ path: path }),
                         });
                         const data = await response.json();
@@ -332,7 +332,7 @@ createApp({
             try {
                 const response = await fetch(urlLoadBots, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify({}),
                 });
                 const data = await response.json();
@@ -358,7 +358,7 @@ createApp({
             try {
                 const response = await fetch(urlAddBot, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify({ ip: newBotIP.value.trim() }),
                 });
                 const data = await response.json();
@@ -389,7 +389,7 @@ createApp({
                     try {
                         const response = await fetch(urlRemoveBot, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                             body: JSON.stringify({ ip: ip }),
                         });
                         const data = await response.json();
@@ -429,7 +429,7 @@ createApp({
                     try {
                         const response = await fetch(urlDeleteBots, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                             body: JSON.stringify({}),
                         });
                         const data = await response.json();
@@ -462,7 +462,7 @@ createApp({
                     try {
                         const response = await fetch(urlDeleteThreats, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                             body: JSON.stringify({}),
                         });
                         const data = await response.json();
@@ -487,7 +487,7 @@ createApp({
                 const body = olderThan ? { older_than: olderThan } : {};
                 const response = await fetch(urlLoadStats, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify(body),
                 });
                 const data = await response.json();
@@ -526,7 +526,7 @@ createApp({
                     try {
                         const response = await fetch(urlDeleteVisitors, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                             body: JSON.stringify({ older_than: deleteOlderThanDate.value }),
                         });
                         const data = await response.json();
@@ -557,7 +557,7 @@ createApp({
             try {
                 const response = await fetch(urlIdentifyBots, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify({}),
                 });
                 const data = await response.json();
@@ -596,7 +596,7 @@ createApp({
             try {
                 const response = await fetch(urlAddBot, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify({ ip: ip, reasons: reasons }),
                 });
                 const data = await response.json();
@@ -630,7 +630,7 @@ createApp({
                 try {
                     const response = await fetch(urlAddBot, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                         body: JSON.stringify({ ip: c.candidate_ip, reasons: c.reasons || [] }),
                     });
                     const data = await response.json();

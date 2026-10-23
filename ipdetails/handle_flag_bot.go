@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"net/netip"
 	"strings"
 
 	"github.com/dracory/statsadmin/shared"
@@ -36,12 +37,16 @@ func (controller *ipDetailsController) handleFlagBot(w http.ResponseWriter, r *h
 		api.Respond(w, r, api.Error("IP address is required"))
 		return ""
 	}
+	if _, err := netip.ParseAddr(ip); err != nil {
+		api.Respond(w, r, api.Error("Invalid IP address"))
+		return ""
+	}
 
 	// Set bot='yes' on all visitor records for this IP.
 	count, err := shared.FlagIPVisitorsAsBot(r.Context(), store, ip)
 	if err != nil {
 		slog.Error("statsadmin ipdetails: failed to flag IP as bot", "ip", ip, "error", err)
-		api.Respond(w, r, api.Error(err.Error()))
+		api.Respond(w, r, api.Error("Failed to flag IP: "+err.Error()))
 		return ""
 	}
 	if count == 0 {

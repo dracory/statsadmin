@@ -20,7 +20,7 @@ func (controller *settingsController) handleLoadExcludedPaths(w http.ResponseWri
 
 	paths, err := store.ExcludedPathList(r.Context())
 	if err != nil {
-		api.Respond(w, r, api.Error(err.Error()))
+		api.Respond(w, r, api.Error("Failed to load excluded paths: "+err.Error()))
 		return ""
 	}
 

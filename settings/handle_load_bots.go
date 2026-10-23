@@ -34,7 +34,7 @@ func (controller *settingsController) handleLoadBots(w http.ResponseWriter, r *h
 		SetBot(statsstore.VALUE_YES).
 		SetLimit(100000))
 	if err != nil {
-		api.Respond(w, r, api.Error("Failed to load bot visitors"))
+		api.Respond(w, r, api.Error("Failed to load bot visitors: "+err.Error()))
 		return ""
 	}
 

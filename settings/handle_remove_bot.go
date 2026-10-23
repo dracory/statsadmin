@@ -1,10 +1,10 @@
 package settings
 
 import (
-	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"net/netip"
 	"strings"
 
 	"github.com/dracory/api"
@@ -30,6 +30,10 @@ func (controller *settingsController) handleRemoveBot(w http.ResponseWriter, r *
 		api.Respond(w, r, api.Error("IP address is required"))
 		return ""
 	}
+	if _, err := netip.ParseAddr(ip); err != nil {
+		api.Respond(w, r, api.Error("Invalid IP address"))
+		return ""
+	}
 
 	store := controller.opts.Store
 	if store == nil {
@@ -38,32 +42,12 @@ func (controller *settingsController) handleRemoveBot(w http.ResponseWriter, r *
 	}
 
 	// Set bot='no' on all visitor records for this IP.
-	if err := unflagIPVisitorsAsBot(r.Context(), store, ip); err != nil {
+	if _, err := store.VisitorSetBotByIP(r.Context(), ip, statsstore.VALUE_NO); err != nil {
 		slog.Error("statsadmin settings: failed to clear visitor bot flag", "ip", ip, "error", err)
-		api.Respond(w, r, api.Error(err.Error()))
+		api.Respond(w, r, api.Error("Failed to remove bot IP: "+err.Error()))
 		return ""
 	}
 
 	api.Respond(w, r, api.Success("IP removed from bot list"))
 	return ""
-}
-
-// unflagIPVisitorsAsBot sets bot='no' on all visitor records for the given IP.
-func unflagIPVisitorsAsBot(ctx context.Context, store statsstore.StoreInterface, ip string) error {
-	visitors, err := store.VisitorList(ctx, statsstore.VisitorQuery().
-		SetIPIn([]string{ip}).
-		SetLimit(100000))
-	if err != nil {
-		return err
-	}
-	for _, v := range visitors {
-		if v.GetBot() == statsstore.VALUE_NO {
-			continue
-		}
-		v.SetBot(statsstore.VALUE_NO)
-		if err := store.VisitorUpdate(ctx, v); err != nil {
-			return err
-		}
-	}
-	return nil
 }

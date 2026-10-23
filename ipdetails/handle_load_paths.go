@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"net/netip"
 	"sort"
 	"strings"
 
@@ -46,6 +47,10 @@ func (controller *ipDetailsController) handleLoadPaths(w http.ResponseWriter, r 
 		api.Respond(w, r, api.Error("IP address is required"))
 		return ""
 	}
+	if _, err := netip.ParseAddr(ip); err != nil {
+		api.Respond(w, r, api.Error("Invalid IP address"))
+		return ""
+	}
 
 	excludeBots := false
 	for _, c := range body.Conditions {
@@ -57,28 +62,25 @@ func (controller *ipDetailsController) handleLoadPaths(w http.ResponseWriter, r 
 
 	ctx := r.Context()
 
-	// Fetch all visitors for this IP. The store query doesn't support
-	// filtering by IP directly, so we fetch a large batch and filter
-	// in-memory. PathContains with empty string matches all paths.
+	// Fetch all visitors for this IP (filtered in SQL via SetIPIn).
 	visitors, err := store.VisitorList(ctx, statsstore.VisitorQuery().
+		SetIPIn([]string{ip}).
 		SetOrderBy("created_at").
 		SetSortOrder("DESC").
 		SetLimit(10000))
 	if err != nil {
 		slog.Error("ipdetails: failed to load visitors", "error", err)
-		api.Respond(w, r, api.Error("Failed to load visitor data"))
+		api.Respond(w, r, api.Error("Failed to load visitor data: "+err.Error()))
 		return ""
 	}
 
-	// Filter to just this IP (and optionally exclude bot visits if is_bot=no condition is set).
+	// Optionally exclude bot visits if is_bot=no condition is set.
 	var ipVisitors []statsstore.VisitorInterface
 	for _, v := range visitors {
-		if v.GetIpAddress() == ip {
-			if excludeBots && shared.IsBotVisitor(v) {
-				continue
-			}
-			ipVisitors = append(ipVisitors, v)
+		if excludeBots && shared.IsBotVisitor(v) {
+			continue
 		}
+		ipVisitors = append(ipVisitors, v)
 	}
 
 	if len(ipVisitors) == 0 {

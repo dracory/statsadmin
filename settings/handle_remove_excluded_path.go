@@ -37,7 +37,7 @@ func (controller *settingsController) handleRemoveExcludedPath(w http.ResponseWr
 
 	if err := store.ExcludedPathRemove(r.Context(), path); err != nil {
 		slog.Error("statsadmin settings: failed to remove excluded path", "path", path, "error", err)
-		api.Respond(w, r, api.Error("Failed to remove path"))
+		api.Respond(w, r, api.Error("Failed to remove path: "+err.Error()))
 		return ""
 	}
 

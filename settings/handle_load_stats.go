@@ -35,7 +35,7 @@ func (controller *settingsController) handleLoadStats(w http.ResponseWriter, r *
 	totalCount, err := store.VisitorCount(r.Context(), statsstore.NewVisitorQuery())
 	if err != nil {
 		slog.Error("statsadmin settings: failed to count visitors", "error", err)
-		api.Respond(w, r, api.Error(err.Error()))
+		api.Respond(w, r, api.Error("Failed to count visitors: "+err.Error()))
 		return ""
 	}
 
@@ -48,7 +48,7 @@ func (controller *settingsController) handleLoadStats(w http.ResponseWriter, r *
 		olderCount, err := store.VisitorCount(r.Context(), statsstore.NewVisitorQuery().SetCreatedAtLte(reqBody.OlderThan))
 		if err != nil {
 			slog.Error("statsadmin settings: failed to count older visitors", "older_than", reqBody.OlderThan, "error", err)
-			api.Respond(w, r, api.Error(err.Error()))
+			api.Respond(w, r, api.Error("Failed to count older visitors: "+err.Error()))
 			return ""
 		}
 		data[FieldOlderCount] = olderCount

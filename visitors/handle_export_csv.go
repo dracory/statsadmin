@@ -12,6 +12,11 @@ import (
 )
 
 func (controller *visitorsController) handleExportCSV(w http.ResponseWriter, r *http.Request) string {
+	if r.Method != http.MethodPost {
+		api.Respond(w, r, api.Error("Method not allowed"))
+		return ""
+	}
+
 	store := controller.opts.Store
 	if store == nil {
 		api.Respond(w, r, api.Error("Stats store not available"))
@@ -21,15 +26,7 @@ func (controller *visitorsController) handleExportCSV(w http.ResponseWriter, r *
 	var reqBody struct {
 		Conditions []condition `json:"conditions"`
 	}
-	// Try POST body first
 	_ = json.NewDecoder(r.Body).Decode(&reqBody)
-
-	// If empty, try query param "filters" (for GET requests if needed, though buttons usually POST)
-	if len(reqBody.Conditions) == 0 {
-		if filters := r.URL.Query().Get("filters"); filters != "" {
-			_ = json.Unmarshal([]byte(filters), &reqBody.Conditions)
-		}
-	}
 
 	ctx := r.Context()
 	storeConds, memConds := splitConditions(reqBody.Conditions)
@@ -44,7 +41,7 @@ func (controller *visitorsController) handleExportCSV(w http.ResponseWriter, r *
 	visitors, err := store.VisitorList(ctx, query)
 	if err != nil {
 		slog.Error("statsadmin visitors: failed to load visitors for export", "error", err)
-		api.Respond(w, r, api.Error("Failed to load data for export"))
+		api.Respond(w, r, api.Error("Failed to load data for export: "+err.Error()))
 		return ""
 	}
 
@@ -65,20 +62,20 @@ func (controller *visitorsController) handleExportCSV(w http.ResponseWriter, r *
 			botVal = statsstore.VALUE_YES
 		}
 		_ = writer.Write([]string{
-			v.GetID(),
-			v.GetCreatedAt(),
-			v.GetIpAddress(),
-			v.GetFingerprint(),
-			v.GetCountry(),
-			controller.opts.CountryName(v.GetCountry()),
-			v.GetPath(),
-			v.GetUserBrowser(),
-			v.GetUserOs(),
-			v.GetUserDevice(),
-			v.GetUserDeviceType(),
-			v.GetUserReferrer(),
-			botVal,
-			v.GetThreat(),
+			shared.CSVSafe(v.GetID()),
+			shared.CSVSafe(v.GetCreatedAt()),
+			shared.CSVSafe(v.GetIpAddress()),
+			shared.CSVSafe(v.GetFingerprint()),
+			shared.CSVSafe(v.GetCountry()),
+			shared.CSVSafe(controller.opts.CountryName(v.GetCountry())),
+			shared.CSVSafe(v.GetPath()),
+			shared.CSVSafe(v.GetUserBrowser()),
+			shared.CSVSafe(v.GetUserOs()),
+			shared.CSVSafe(v.GetUserDevice()),
+			shared.CSVSafe(v.GetUserDeviceType()),
+			shared.CSVSafe(v.GetUserReferrer()),
+			shared.CSVSafe(botVal),
+			shared.CSVSafe(v.GetThreat()),
 		})
 	}
 

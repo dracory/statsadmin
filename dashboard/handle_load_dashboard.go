@@ -88,7 +88,7 @@ func (controller *dashboardController) handleLoadDashboard(w http.ResponseWriter
 	visitors, err := store.VisitorList(ctx, query)
 	if err != nil {
 		slog.Error("statsadmin dashboard: failed to load visitors", "error", err)
-		api.Respond(w, r, api.Error("Failed to load visitor data"))
+		api.Respond(w, r, api.Error("Failed to load visitor data: "+err.Error()))
 		return ""
 	}
 

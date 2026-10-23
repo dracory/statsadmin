@@ -41,7 +41,7 @@ func (controller *settingsController) handleAddExcludedPath(w http.ResponseWrite
 
 	if err := store.ExcludedPathAdd(r.Context(), path); err != nil {
 		slog.Error("statsadmin settings: failed to add excluded path", "path", path, "error", err)
-		api.Respond(w, r, api.Error("Failed to add path"))
+		api.Respond(w, r, api.Error("Failed to add path: "+err.Error()))
 		return ""
 	}
 

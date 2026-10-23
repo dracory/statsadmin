@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strings"
+	"unicode"
 
 	"github.com/dracory/api"
 	"github.com/dracory/statsadmin/shared"
@@ -12,6 +14,11 @@ import (
 )
 
 func (controller *dashboardController) handleExportCSV(w http.ResponseWriter, r *http.Request) string {
+	if r.Method != http.MethodPost {
+		api.Respond(w, r, api.Error("Method not allowed"))
+		return ""
+	}
+
 	store := controller.opts.Store
 	if store == nil {
 		api.Respond(w, r, api.Error("Stats store not available"))
@@ -41,12 +48,21 @@ func (controller *dashboardController) handleExportCSV(w http.ResponseWriter, r 
 	visitors, err := store.VisitorList(ctx, query)
 	if err != nil {
 		slog.Error("statsadmin dashboard: failed to load visitors for export", "error", err)
-		api.Respond(w, r, api.Error("Failed to load visitor data"))
+		api.Respond(w, r, api.Error("Failed to load visitor data: "+err.Error()))
 		return ""
 	}
 
+	// Sanitize the period for use in the Content-Disposition filename to
+	// prevent header injection (CRLF/quotes) via the request body.
+	safePeriod := strings.Map(func(r rune) rune {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '-' || r == '_' {
+			return r
+		}
+		return -1
+	}, reqBody.Period)
+
 	w.Header().Set("Content-Type", "text/csv")
-	w.Header().Set("Content-Disposition", "attachment;filename=visitors_"+reqBody.Period+".csv")
+	w.Header().Set("Content-Disposition", "attachment;filename=visitors_"+safePeriod+".csv")
 
 	writer := csv.NewWriter(w)
 	_ = writer.Write([]string{
@@ -60,20 +76,20 @@ func (controller *dashboardController) handleExportCSV(w http.ResponseWriter, r 
 			botVal = statsstore.VALUE_YES
 		}
 		_ = writer.Write([]string{
-			v.GetID(),
-			v.GetCreatedAt(),
-			v.GetIpAddress(),
-			v.GetFingerprint(),
-			v.GetCountry(),
-			controller.opts.CountryName(v.GetCountry()),
-			v.GetPath(),
-			v.GetUserBrowser(),
-			v.GetUserOs(),
-			v.GetUserDevice(),
-			v.GetUserDeviceType(),
-			v.GetUserReferrer(),
-			botVal,
-			v.GetThreat(),
+			shared.CSVSafe(v.GetID()),
+			shared.CSVSafe(v.GetCreatedAt()),
+			shared.CSVSafe(v.GetIpAddress()),
+			shared.CSVSafe(v.GetFingerprint()),
+			shared.CSVSafe(v.GetCountry()),
+			shared.CSVSafe(controller.opts.CountryName(v.GetCountry())),
+			shared.CSVSafe(v.GetPath()),
+			shared.CSVSafe(v.GetUserBrowser()),
+			shared.CSVSafe(v.GetUserOs()),
+			shared.CSVSafe(v.GetUserDevice()),
+			shared.CSVSafe(v.GetUserDeviceType()),
+			shared.CSVSafe(v.GetUserReferrer()),
+			shared.CSVSafe(botVal),
+			shared.CSVSafe(v.GetThreat()),
 		})
 	}
 
