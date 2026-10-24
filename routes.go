@@ -61,6 +61,9 @@ func Handler(opts shared.ControllerOptions, w http.ResponseWriter, r *http.Reque
 	// Controllers return an HTML string for page renders; AJAX endpoints
 	// write directly to the ResponseWriter and return "".
 	if body != "" {
+		// #nosec G705 -- body is server-rendered HTML produced by the page
+		// controllers (built with hb, which escapes interpolated values),
+		// not raw user input.
 		_, _ = w.Write([]byte(body))
 	}
 }
