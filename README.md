@@ -1,5 +1,9 @@
 # statsadmin
 
+[![Tests Status](https://github.com/dracory/statsadmin/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/dracory/statsadmin/actions/workflows/tests.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/dracory/statsadmin)](https://goreportcard.com/report/github.com/dracory/statsadmin)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/dracory/statsadmin)](https://pkg.go.dev/github.com/dracory/statsadmin)
+
 Embeddable admin dashboard for [`github.com/dracory/statsstore`](https://github.com/dracory/statsstore)
 visitor analytics (extracted from the `statsstore` repository).
 
