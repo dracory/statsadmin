@@ -4,6 +4,7 @@ go 1.27.0
 
 require (
 	github.com/dracory/api v1.8.0
+	github.com/dracory/botdetect v0.1.0
 	github.com/dracory/cdn v1.13.0
 	github.com/dracory/hb v1.88.0
 	github.com/dracory/req v0.1.0

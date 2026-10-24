@@ -69,7 +69,7 @@ const (
 	// Stack-dependent malicious patterns — this is a Go site, so requests
 	// for these file types are scanners probing for non-existent attack
 	// surface. Universal malicious patterns (.env, .git/, .svn/, .htpasswd,
-	// shell.php) come from statsstore.MaliciousPathPatterns().
+	// shell.php) come from botdetect.MaliciousPathPatterns().
 	botPagePatternPhp         = ".php"
 	botPagePatternPy          = ".py"
 	botPagePatternAsp         = ".asp"

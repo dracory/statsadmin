@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/dracory/botdetect"
 	"github.com/dracory/statsstore"
 )
 
@@ -21,15 +22,15 @@ type BotReasonDisplay struct {
 // heuristic triggered the bot flag.
 const (
 	// BotReasonUserAgent indicates the visitor's User-Agent string
-	// self-identified as a bot (matched statsstore.IsBot).
+	// self-identified as a bot (matched botdetect.IsBot).
 	BotReasonUserAgent = "user-agent:bot"
 
 	// BotReasonDataCenterIP indicates the visitor's IP falls within a known
-	// data-center CIDR range (matched statsstore.IsDataCenterIP).
+	// data-center CIDR range (matched botdetect.IsDataCenterIP).
 	BotReasonDataCenterIP = "datacenter-ip"
 
 	// BotReasonReferrerSpam indicates the visitor's referrer matched a known
-	// referrer-spam domain (matched statsstore.IsReferrerSpam).
+	// referrer-spam domain (matched botdetect.IsReferrerSpam).
 	BotReasonReferrerSpam = "referrer-spam"
 )
 
@@ -42,7 +43,7 @@ const (
 // statsstore patterns.
 //
 // Universal bot/malicious path patterns use the same precise matching as
-// statsstore.IsBotPath / statsstore.IsMaliciousPath (suffix on last path
+// botdetect.IsBotPath / botdetect.IsMaliciousPath (suffix on last path
 // segment for file patterns, segment match for directory patterns). Extra
 // consumer patterns use case-insensitive substring matching, consistent
 // with the identify-bots scan. The returned slice is sorted by pattern for
@@ -70,8 +71,8 @@ func ComputeBotReasons(visitors []statsstore.VisitorInterface, extraPathPatterns
 		}
 	}
 
-	botPatterns := statsstore.BotPathPatterns()
-	maliciousPatterns := statsstore.MaliciousPathPatterns()
+	botPatterns := botdetect.BotPathPatterns()
+	maliciousPatterns := botdetect.MaliciousPathPatterns()
 
 	// Pre-lowercase extra patterns once for case-insensitive substring
 	// matching (matching the identify-bots scan behavior).
@@ -92,33 +93,33 @@ func ComputeBotReasons(visitors []statsstore.VisitorInterface, extraPathPatterns
 
 		// User-agent self-identification (e.g. "Googlebot", "curl").
 		// The path is irrelevant — the signal is the UA string, not the URL.
-		if ua != "" && statsstore.IsBot(ua) {
+		if ua != "" && botdetect.IsBot(ua) {
 			addReason(BotReasonUserAgent, "")
 		}
 
 		// Data-center IP — check once per IP since it's IP-level, not per-visit.
 		// The path is irrelevant — the signal is the IP range, not the URL.
-		if !dataCenterChecked && ip != "" && statsstore.IsDataCenterIP(ip) {
+		if !dataCenterChecked && ip != "" && botdetect.IsDataCenterIP(ip) {
 			addReason(BotReasonDataCenterIP, "")
 			dataCenterChecked = true
 		}
 
 		// Referrer spam.
 		// The path is irrelevant — the signal is the referrer domain, not the URL.
-		if referrer != "" && statsstore.IsReferrerSpam(referrer) {
+		if referrer != "" && botdetect.IsReferrerSpam(referrer) {
 			addReason(BotReasonReferrerSpam, "")
 		}
 
 		// Bot-only path patterns (robots.txt, ads.txt, sitemap.xml, etc.).
 		// Uses the same suffix-on-last-segment matching as
-		// statsstore.IsBotPath to avoid false positives like
+		// botdetect.IsBotPath to avoid false positives like
 		// "/robots.txt.backup" matching "robots.txt".
 		if matched := matchBotPath(path, botPatterns); matched != "" {
 			addReason(matched, path)
 		}
 
 		// Universal malicious path patterns (.env, .git/, shell.php, etc.).
-		// Uses the same matching as statsstore.IsMaliciousPath: suffix on
+		// Uses the same matching as botdetect.IsMaliciousPath: suffix on
 		// last segment for file patterns, segment match for directory
 		// patterns (ending in "/").
 		if matched := matchMaliciousPath(path, maliciousPatterns); matched != "" {
@@ -155,7 +156,7 @@ func ComputeBotReasons(visitors []statsstore.VisitorInterface, extraPathPatterns
 }
 
 // matchBotPath finds the first bot path pattern that matches the given path
-// using suffix-on-last-segment matching (same as statsstore.IsBotPath).
+// using suffix-on-last-segment matching (same as botdetect.IsBotPath).
 // Returns the matched pattern string, or "" if no match.
 func matchBotPath(path string, patterns []string) string {
 	if path == "" {
@@ -172,7 +173,7 @@ func matchBotPath(path string, patterns []string) string {
 }
 
 // matchMaliciousPath finds the first malicious path pattern that matches the
-// given path using the same logic as statsstore.IsMaliciousPath: suffix on
+// given path using the same logic as botdetect.IsMaliciousPath: suffix on
 // last segment for file patterns, segment match for directory patterns
 // (patterns ending in "/"). Returns the matched pattern string, or "" if
 // no match.

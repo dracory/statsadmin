@@ -8,6 +8,7 @@ import (
 
 	"github.com/dracory/api"
 	"github.com/dracory/statsadmin/shared"
+	"github.com/dracory/botdetect"
 	"github.com/dracory/statsstore"
 )
 
@@ -87,7 +88,7 @@ func (controller *settingsController) handleLoadBots(w http.ResponseWriter, r *h
 		// Check user agent for self-identifying bots.
 		// The path is irrelevant — the signal is the UA string, not the URL.
 		ua := v.GetUserAgent()
-		if ua != "" && statsstore.IsBot(ua) {
+		if ua != "" && botdetect.IsBot(ua) {
 			reason, ok := a.Reasons[shared.BotReasonUserAgent]
 			if !ok {
 				reason = &reasonAgg{Pattern: shared.BotReasonUserAgent}
@@ -98,7 +99,7 @@ func (controller *settingsController) handleLoadBots(w http.ResponseWriter, r *h
 
 		// Check data-center IP (once per IP — it's IP-level, not per-visit).
 		// The path is irrelevant — the signal is the IP range, not the URL.
-		if !dataCenterChecked[ip] && statsstore.IsDataCenterIP(ip) {
+		if !dataCenterChecked[ip] && botdetect.IsDataCenterIP(ip) {
 			reason, ok := a.Reasons[shared.BotReasonDataCenterIP]
 			if !ok {
 				reason = &reasonAgg{Pattern: shared.BotReasonDataCenterIP}
@@ -111,7 +112,7 @@ func (controller *settingsController) handleLoadBots(w http.ResponseWriter, r *h
 		// Check referrer spam.
 		// The path is irrelevant — the signal is the referrer domain, not the URL.
 		referrer := v.GetUserReferrer()
-		if referrer != "" && statsstore.IsReferrerSpam(referrer) {
+		if referrer != "" && botdetect.IsReferrerSpam(referrer) {
 			reason, ok := a.Reasons[shared.BotReasonReferrerSpam]
 			if !ok {
 				reason = &reasonAgg{Pattern: shared.BotReasonReferrerSpam}

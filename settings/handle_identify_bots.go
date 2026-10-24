@@ -10,6 +10,7 @@ import (
 	"github.com/dracory/statsadmin/shared"
 
 	"github.com/dracory/api"
+	"github.com/dracory/botdetect"
 	"github.com/dracory/statsstore"
 )
 
@@ -17,7 +18,7 @@ import (
 // Go site but could be legitimate on other tech stacks (e.g. .php on a PHP
 // site, wp-admin on WordPress). This is a Go site, so all of these are
 // treated as malicious. Universal malicious patterns (.env, .git/, .svn/,
-// .htpasswd, shell.php) come from statsstore.MaliciousPathPatterns().
+// .htpasswd, shell.php) come from botdetect.MaliciousPathPatterns().
 var stackDependentMaliciousPatterns = []string{
 	botPagePatternPhp,
 	botPagePatternPy,
@@ -53,7 +54,7 @@ var consumerSpecificBotPathPatterns = []string{
 // these is sufficient evidence to auto-add the IP as a bot.
 var allMaliciousPatterns = func() map[string]bool {
 	m := map[string]bool{}
-	for _, p := range statsstore.MaliciousPathPatterns() {
+	for _, p := range botdetect.MaliciousPathPatterns() {
 		m[p] = true
 	}
 	for _, p := range stackDependentMaliciousPatterns {
@@ -68,8 +69,8 @@ var allMaliciousPatterns = func() map[string]bool {
 //   - consumer-specific bot file patterns (google verification)
 //   - stack-dependent malicious patterns for this Go site (.php, wp-admin, etc.)
 var botPagePatterns = func() []string {
-	patterns := statsstore.BotPathPatterns()
-	patterns = append(patterns, statsstore.MaliciousPathPatterns()...)
+	patterns := botdetect.BotPathPatterns()
+	patterns = append(patterns, botdetect.MaliciousPathPatterns()...)
 	patterns = append(patterns, consumerSpecificBotPathPatterns...)
 	patterns = append(patterns, stackDependentMaliciousPatterns...)
 	return patterns
@@ -174,7 +175,7 @@ func getExistingBotIPs(ctx context.Context, store statsstore.StoreInterface) []s
 
 // collectBotCandidates scans the stats store for visitors whose path matches
 // any bot-page pattern, fetching all records in batches. A separate user-agent
-// scan pass checks each visitor's user agent against statsstore.IsBot().
+// scan pass checks each visitor's user agent against botdetect.IsBot().
 // IPs already in the bot list are skipped.
 func collectBotCandidates(ctx context.Context, store statsstore.StoreInterface, existingBots []string) map[string]*botCandidate {
 	ipAgg := map[string]*botCandidate{}
@@ -226,7 +227,7 @@ func scanPattern(ctx context.Context, store statsstore.StoreInterface, pattern s
 }
 
 // scanUserAgents fetches all visitors in batches and checks each visitor's
-// user agent string against statsstore.IsBot(). IPs whose user agent
+// user agent string against botdetect.IsBot(). IPs whose user agent
 // self-identifies as a bot are added as candidates. This catches bots that
 // don't visit crawler pages (e.g. SemrushBot making normal page requests).
 func scanUserAgents(ctx context.Context, store statsstore.StoreInterface, ipAgg map[string]*botCandidate, skipSet map[string]bool) {
@@ -248,7 +249,7 @@ func scanUserAgents(ctx context.Context, store statsstore.StoreInterface, ipAgg 
 				continue
 			}
 			ua := v.GetUserAgent()
-			if ua == "" || !statsstore.IsBot(ua) {
+			if ua == "" || !botdetect.IsBot(ua) {
 				continue
 			}
 			mergeVisitorIntoCandidates(ipAgg, v, userAgentPattern)
