@@ -1,7 +1,7 @@
 ---
 created: '2026-10-25'
 priority: high
-status: in_progress
+status: done
 tags: []
 title: Capture UTM + source/medium/campaign at registration
 ---
