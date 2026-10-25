@@ -8,6 +8,8 @@ const (
 	FieldUniqueVisitors     = "unique_visitors"
 	FieldSessions           = "sessions"
 	FieldBounceRate         = "bounce_rate"
+	FieldAvgSessionDuration = "avg_session_duration"
+	FieldPagesPerSession    = "pages_per_session"
 	FieldPeriod             = "period"
 	FieldPeriodLabel        = "period_label"
 	FieldTopPaths           = "top_paths"

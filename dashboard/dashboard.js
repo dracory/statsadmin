@@ -27,7 +27,20 @@ createApp({
         const uniqueVisitors = ref(0);
         const sessions = ref(0);
         const bounceRate = ref(0);
+        const avgSessionSeconds = ref(0);
+        const pagesPerSession = ref(0);
         const hasSessionStats = ref(false);
+
+        const avgSessionDuration = computed(() => {
+            const s = avgSessionSeconds.value;
+            if (s >= 3600) {
+                return Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
+            }
+            if (s >= 60) {
+                return Math.floor(s / 60) + 'm ' + Math.round(s % 60) + 's';
+            }
+            return Math.round(s) + 's';
+        });
         const periodLabel = ref('');
         const selectedPeriod = ref('last-7-days');
         const topPaths = ref([]);
@@ -85,6 +98,8 @@ createApp({
                     hasSessionStats.value = d.bounce_rate !== undefined;
                     sessions.value = d.sessions || 0;
                     bounceRate.value = d.bounce_rate || 0;
+                    avgSessionSeconds.value = d.avg_session_duration || 0;
+                    pagesPerSession.value = d.pages_per_session || 0;
                     periodLabel.value = d.period_label || '';
                     topPaths.value = d.top_paths || [];
                     topCountries.value = d.top_countries || [];
@@ -155,6 +170,9 @@ createApp({
             uniqueVisitors,
             sessions,
             bounceRate,
+            avgSessionSeconds,
+            avgSessionDuration,
+            pagesPerSession,
             hasSessionStats,
             periodLabel,
             selectedPeriod,

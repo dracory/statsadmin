@@ -112,15 +112,20 @@ func TestDashboardController_LoadDashboard_IncludeBotsToggle(t *testing.T) {
 func TestDashboardController_LoadDashboard_BounceRate(t *testing.T) {
 	opts, _, store := shared.NewTestControllerOptions(t)
 
-	// One session with two page views (same fingerprint, same time window)
-	// and one single-page session => 1 bounce of 2 sessions => 50%.
-	for _, p := range []string{"/a", "/b"} {
-		v := statsstore.NewVisitor().SetFingerprint("fp-1").SetIpAddress("1.2.3.4").SetPath(p)
+	// Session A: two page views 10 min apart (same fingerprint within the
+	// gap window) => 600s duration, 2 pages. Session B: single view => bounce.
+	// Expected: 1 bounce of 2 sessions => 50% bounce rate; avg duration
+	// (600+0)/2 = 300s; pages per session (2+1)/2 = 1.5.
+	for _, seed := range []struct{ path, createdAt string }{
+		{"/a", "2020-01-01 10:00:00"},
+		{"/b", "2020-01-01 10:10:00"},
+	} {
+		v := statsstore.NewVisitor().SetFingerprint("fp-1").SetIpAddress("1.2.3.4").SetPath(seed.path).SetCreatedAt(seed.createdAt)
 		if err := store.VisitorCreate(context.Background(), v); err != nil {
 			t.Fatalf("seed failed: %v", err)
 		}
 	}
-	v := statsstore.NewVisitor().SetFingerprint("fp-2").SetIpAddress("5.6.7.8").SetPath("/c")
+	v := statsstore.NewVisitor().SetFingerprint("fp-2").SetIpAddress("5.6.7.8").SetPath("/c").SetCreatedAt("2020-01-01 11:00:00")
 	if err := store.VisitorCreate(context.Background(), v); err != nil {
 		t.Fatalf("seed failed: %v", err)
 	}
@@ -139,5 +144,11 @@ func TestDashboardController_LoadDashboard_BounceRate(t *testing.T) {
 	}
 	if !strings.Contains(body, `"bounce_rate":50`) {
 		t.Errorf("expected 50%% bounce rate, got: %s", body)
+	}
+	if !strings.Contains(body, `"avg_session_duration":300`) {
+		t.Errorf("expected 300s avg session duration, got: %s", body)
+	}
+	if !strings.Contains(body, `"pages_per_session":1.5`) {
+		t.Errorf("expected 1.5 pages per session, got: %s", body)
 	}
 }

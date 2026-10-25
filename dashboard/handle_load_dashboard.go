@@ -125,6 +125,8 @@ func (controller *dashboardController) handleLoadDashboard(w http.ResponseWriter
 	//    slightly inflates bounce rate on narrow periods.
 	var sessionCount int64
 	var bounceRate float64
+	var avgDuration float64
+	var pagesPerSession float64
 	var hasSessionStats bool
 
 	sessionQuery := statsstore.VisitorQuery().
@@ -138,14 +140,18 @@ func (controller *dashboardController) handleLoadDashboard(w http.ResponseWriter
 	} else {
 		hasSessionStats = true
 		sessionCount = int64(len(sessions))
-		var bounces int64
+		var bounces, durationSum, pageViewSum int64
 		for _, s := range sessions {
 			if s.IsBounce() {
 				bounces++
 			}
+			durationSum += s.GetDurationSeconds()
+			pageViewSum += s.GetPageViews()
 		}
 		if sessionCount > 0 {
 			bounceRate = float64(bounces) / float64(sessionCount) * 100
+			avgDuration = float64(durationSum) / float64(sessionCount)
+			pagesPerSession = float64(pageViewSum) / float64(sessionCount)
 		}
 	}
 
@@ -164,6 +170,8 @@ func (controller *dashboardController) handleLoadDashboard(w http.ResponseWriter
 	if hasSessionStats {
 		response[FieldSessions] = sessionCount
 		response[FieldBounceRate] = math.Round(bounceRate*10) / 10
+		response[FieldAvgSessionDuration] = math.Round(avgDuration)
+		response[FieldPagesPerSession] = math.Round(pagesPerSession*100) / 100
 	}
 
 	api.Respond(w, r, api.SuccessWithData("Dashboard loaded", response))
