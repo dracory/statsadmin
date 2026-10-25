@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/dracory/api"
-	"github.com/dracory/statsadmin/shared"
 	"github.com/dracory/botdetect"
+	"github.com/dracory/statsadmin/shared"
 	"github.com/dracory/statsstore"
 )
 

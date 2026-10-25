@@ -6,6 +6,8 @@ const (
 
 	FieldTotalVisitors      = "total_visitors"
 	FieldUniqueVisitors     = "unique_visitors"
+	FieldSessions           = "sessions"
+	FieldBounceRate         = "bounce_rate"
 	FieldPeriod             = "period"
 	FieldPeriodLabel        = "period_label"
 	FieldTopPaths           = "top_paths"

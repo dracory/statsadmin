@@ -67,6 +67,22 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-3" v-if="hasSessionStats">
+            <div class="card text-bg-secondary">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-uppercase">Sessions</h6>
+                    <h3 class="mb-0">{{ sessions }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3" v-if="hasSessionStats">
+            <div class="card text-bg-danger">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-uppercase">Bounce Rate</h6>
+                    <h3 class="mb-0">{{ bounceRate }}%</h3>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="row g-3 mb-4">

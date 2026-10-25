@@ -1,12 +1,14 @@
 package dashboard
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/dracory/statsadmin/shared"
+	"github.com/dracory/statsstore"
 )
 
 func TestDashboardController_RendersPage(t *testing.T) {
@@ -104,5 +106,38 @@ func TestDashboardController_LoadDashboard_IncludeBotsToggle(t *testing.T) {
 	_ = controller.Handler(wFalse, reqFalse)
 	if !strings.Contains(wFalse.Body.String(), `"total_visitors":1`) {
 		t.Errorf("expected 1 total visitor when is_bot=no condition applied, got: %s", wFalse.Body.String())
+	}
+}
+
+func TestDashboardController_LoadDashboard_BounceRate(t *testing.T) {
+	opts, _, store := shared.NewTestControllerOptions(t)
+
+	// One session with two page views (same fingerprint, same time window)
+	// and one single-page session => 1 bounce of 2 sessions => 50%.
+	for _, p := range []string{"/a", "/b"} {
+		v := statsstore.NewVisitor().SetFingerprint("fp-1").SetIpAddress("1.2.3.4").SetPath(p)
+		if err := store.VisitorCreate(context.Background(), v); err != nil {
+			t.Fatalf("seed failed: %v", err)
+		}
+	}
+	v := statsstore.NewVisitor().SetFingerprint("fp-2").SetIpAddress("5.6.7.8").SetPath("/c")
+	if err := store.VisitorCreate(context.Background(), v); err != nil {
+		t.Fatalf("seed failed: %v", err)
+	}
+
+	controller := NewDashboardController(opts)
+
+	req := httptest.NewRequest(http.MethodPost, "/admin/stats?action=load-dashboard", strings.NewReader(`{"period":"all-time"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	_ = controller.Handler(w, req)
+	body := w.Body.String()
+
+	if !strings.Contains(body, `"sessions":2`) {
+		t.Errorf("expected 2 sessions, got: %s", body)
+	}
+	if !strings.Contains(body, `"bounce_rate":50`) {
+		t.Errorf("expected 50%% bounce rate, got: %s", body)
 	}
 }

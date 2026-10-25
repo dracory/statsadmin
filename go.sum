@@ -26,6 +26,8 @@ github.com/dracory/statsstore v1.32.4-0.20261023070116-8467bca24f40 h1:pFRwhhEk6
 github.com/dracory/statsstore v1.32.4-0.20261023070116-8467bca24f40/go.mod h1:5/wXIdbUeHeDatTE2oT2Av4O0Nh7k0KohOo6JlGLFcM=
 github.com/dracory/statsstore v1.32.4-0.20261023072400-b013c43b831f h1:oE+cQaZmV94E8OIqSvRxHoJW2LX8jH71Bh6lORC0DQk=
 github.com/dracory/statsstore v1.32.4-0.20261023072400-b013c43b831f/go.mod h1:5/wXIdbUeHeDatTE2oT2Av4O0Nh7k0KohOo6JlGLFcM=
+github.com/dracory/statsstore v1.33.0 h1:tv6siffbS5dPblhHvnLb+HAwwomyLZViQwEQ3QkW9Zs=
+github.com/dracory/statsstore v1.33.0/go.mod h1:5/wXIdbUeHeDatTE2oT2Av4O0Nh7k0KohOo6JlGLFcM=
 github.com/dracory/str v0.19.0 h1:tcQ+znPofNE+OO4mPM0QVDCOYCLkf+DMyVmUBrnoJSw=
 github.com/dracory/str v0.19.0/go.mod h1:uCrCZWzm0h8eDxckF0ydWqF1hM1Ro1kZBqhi4GOff2w=
 github.com/dromara/carbon/v2 v2.7.0 h1:AIROgPOmhpJgwtHM9FYv0s/a3HI4x8UBBWxJ1uo+QFM=

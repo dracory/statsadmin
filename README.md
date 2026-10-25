@@ -14,7 +14,7 @@ about the host application.
 
 ## Features
 
-- **Dashboard** — total/unique visitors, top paths/countries/browsers/OS/device types, recent visitors
+- **Dashboard** — total/unique visitors, sessions, bounce rate, top paths/countries/browsers/OS/device types, recent visitors
 - **Visitors** — paginated, filterable visitor list (IP, country, browser, OS, device type, path, date range, bot/threat flags), CSV export
 - **Sessions** — visitor sessions grouped by IP with visit history, CSV export
 - **IP Details** — per-IP deep dive with path history, bot-reason breakdown, flag as bot/threat, delete entries

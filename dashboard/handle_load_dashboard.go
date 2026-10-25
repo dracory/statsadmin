@@ -3,6 +3,7 @@ package dashboard
 import (
 	"encoding/json"
 	"log/slog"
+	"math"
 	"net/http"
 	"strings"
 
@@ -110,7 +111,45 @@ func (controller *dashboardController) handleLoadDashboard(w http.ResponseWriter
 	// Recent visitors (last 15, newest first — visitors are typically ordered by created_at desc).
 	recent := buildRecentVisitors(like, 15, controller.opts)
 
-	api.Respond(w, r, api.SuccessWithData("Dashboard loaded", map[string]any{
+	// Session metrics. SessionList may fail on stores that have not migrated
+	// the session_id column — degrade to no session stats rather than
+	// failing the whole dashboard.
+	//
+	// Known limitations:
+	//  - All sessions in the period are materialized to count bounces; on
+	//    very high-traffic stores this is unbounded. Revisit with a dedicated
+	//    bounce-count store query if it becomes a problem.
+	//  - Sessions are grouped only over rows inside [from, to], so a session
+	//    spanning the period boundary is truncated — a multi-page session
+	//    whose other views fall outside the range counts as a bounce. This
+	//    slightly inflates bounce rate on narrow periods.
+	var sessionCount int64
+	var bounceRate float64
+	var hasSessionStats bool
+
+	sessionQuery := statsstore.VisitorQuery().
+		SetCreatedAtGte(bounds.From).
+		SetCreatedAtLte(bounds.To)
+	applyStoreConditions(sessionQuery, reqBody.Conditions)
+
+	sessions, err := store.SessionList(ctx, sessionQuery)
+	if err != nil {
+		slog.Warn("statsadmin dashboard: session stats unavailable", "error", err)
+	} else {
+		hasSessionStats = true
+		sessionCount = int64(len(sessions))
+		var bounces int64
+		for _, s := range sessions {
+			if s.IsBounce() {
+				bounces++
+			}
+		}
+		if sessionCount > 0 {
+			bounceRate = float64(bounces) / float64(sessionCount) * 100
+		}
+	}
+
+	response := map[string]any{
 		FieldTotalVisitors:  totalVisitors,
 		FieldUniqueVisitors: uniqueVisitors,
 		FieldPeriod:         reqBody.Period,
@@ -121,7 +160,13 @@ func (controller *dashboardController) handleLoadDashboard(w http.ResponseWriter
 		FieldTopOS:          toCountList(topOS),
 		FieldTopDeviceTypes: toCountList(topDeviceTypes),
 		FieldRecentVisitors: recent,
-	}))
+	}
+	if hasSessionStats {
+		response[FieldSessions] = sessionCount
+		response[FieldBounceRate] = math.Round(bounceRate*10) / 10
+	}
+
+	api.Respond(w, r, api.SuccessWithData("Dashboard loaded", response))
 	return ""
 }
 

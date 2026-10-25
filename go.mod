@@ -8,7 +8,7 @@ require (
 	github.com/dracory/cdn v1.13.0
 	github.com/dracory/hb v1.88.0
 	github.com/dracory/req v0.1.0
-	github.com/dracory/statsstore v1.32.4-0.20261023072400-b013c43b831f
+	github.com/dracory/statsstore v1.33.0
 	github.com/dromara/carbon/v2 v2.7.0
 	modernc.org/sqlite v1.61.0
 )
