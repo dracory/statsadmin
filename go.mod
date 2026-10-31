@@ -15,7 +15,7 @@ require (
 
 require (
 	github.com/LumenResearch/uasurfer v0.3.1 // indirect
-	github.com/dracory/neat v0.60.1 // indirect
+	github.com/dracory/neat v0.61.0 // indirect
 	github.com/dracory/str v0.19.0 // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
