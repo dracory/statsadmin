@@ -8,14 +8,14 @@ require (
 	github.com/dracory/cdn v1.13.0
 	github.com/dracory/hb v1.88.0
 	github.com/dracory/req v0.1.0
-	github.com/dracory/statsstore v1.33.3
+	github.com/dracory/statsstore v1.34.0
 	github.com/dromara/carbon/v2 v2.7.0
 	modernc.org/sqlite v1.61.0
 )
 
 require (
 	github.com/LumenResearch/uasurfer v0.3.1 // indirect
-	github.com/dracory/neat v0.58.0 // indirect
+	github.com/dracory/neat v0.60.1 // indirect
 	github.com/dracory/str v0.19.0 // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
