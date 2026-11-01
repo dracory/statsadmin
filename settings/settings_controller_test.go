@@ -49,7 +49,7 @@ func TestSettingsController_RendersPage(t *testing.T) {
 
 	body := controller.Handler(w, req)
 
-	if !strings.Contains(body, "Stats Settings") {
+	if !strings.Contains(body, "Stats. Settings") {
 		t.Error("should render settings heading")
 	}
 	if !strings.Contains(layout.Body, "settings-app") {
