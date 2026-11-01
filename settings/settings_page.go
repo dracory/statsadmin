@@ -33,7 +33,7 @@ func (controller *settingsController) renderPage(w http.ResponseWriter, r *http.
 		{Name: "Settings", URL: ""},
 	})
 
-	heading := shared.PageHeader("Stats Settings")
+	heading := shared.PageHeader("Stats. Settings")
 
 	linksHelper := shared.NewLinks(controller.opts.BaseURL)
 	urlLoadIPs := linksHelper.Settings(map[string]string{"action": actionLoadIPs})

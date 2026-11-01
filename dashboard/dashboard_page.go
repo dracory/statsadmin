@@ -34,7 +34,7 @@ func (controller *dashboardController) renderPage(w http.ResponseWriter, r *http
 		{Name: "Dashboard", URL: ""},
 	})
 
-	heading := shared.PageHeader("Visitor Analytics")
+	heading := shared.PageHeader("Stats. Visitor Analytics")
 
 	linksHelper := shared.NewLinks(controller.opts.BaseURL)
 	urlLoadDashboard := linksHelper.Dashboard(map[string]string{"action": actionLoadDashboard})

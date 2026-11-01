@@ -33,7 +33,7 @@ func (controller *sessionsController) renderPage(w http.ResponseWriter, r *http.
 		{Name: "Sessions", URL: ""},
 	})
 
-	heading := shared.PageHeader("Sessions")
+	heading := shared.PageHeader("Stats. Sessions")
 
 	linksHelper := shared.NewLinks(controller.opts.BaseURL)
 	urlLoadSessions := linksHelper.Sessions(map[string]string{"action": actionLoadSessions})

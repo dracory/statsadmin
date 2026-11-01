@@ -33,7 +33,7 @@ func (controller *visitorsController) renderPage(w http.ResponseWriter, r *http.
 		{Name: "Visitors", URL: ""},
 	})
 
-	heading := shared.PageHeader("Visitors")
+	heading := shared.PageHeader("Stats. Visitors")
 
 	linksHelper := shared.NewLinks(controller.opts.BaseURL)
 	urlLoadVisitors := linksHelper.Visitors(map[string]string{"action": actionLoadVisitors})

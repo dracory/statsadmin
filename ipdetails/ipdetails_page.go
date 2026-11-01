@@ -40,7 +40,7 @@ func (controller *ipDetailsController) renderPage(w http.ResponseWriter, r *http
 		{Name: "IP: " + ip, URL: ""},
 	})
 
-	heading := shared.PageHeader("IP Details: " + ip)
+	heading := shared.PageHeader("Stats. IP Details: " + ip)
 
 	linksHelper := shared.NewLinks(controller.opts.BaseURL)
 	urlLoadPaths := linksHelper.IPDetails(map[string]string{
