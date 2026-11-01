@@ -7,7 +7,7 @@ import (
 // Breadcrumbs renders a breadcrumb navigation trail from the given entries.
 // The last entry should have an empty URL to indicate the current page.
 func Breadcrumbs(items []Breadcrumb) hb.TagInterface {
-	ol := hb.Ol().Class("breadcrumb")
+	ol := hb.Ol().Class("breadcrumb").Style("border:none;")
 
 	for i, item := range items {
 		li := hb.Li().Class("breadcrumb-item")

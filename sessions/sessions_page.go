@@ -33,7 +33,7 @@ func (controller *sessionsController) renderPage(w http.ResponseWriter, r *http.
 		{Name: "Sessions", URL: ""},
 	})
 
-	heading := hb.Heading1().HTML("Sessions")
+	heading := shared.PageHeader("Sessions")
 
 	linksHelper := shared.NewLinks(controller.opts.BaseURL)
 	urlLoadSessions := linksHelper.Sessions(map[string]string{"action": actionLoadSessions})
@@ -56,10 +56,9 @@ func (controller *sessionsController) renderPage(w http.ResponseWriter, r *http.
 	vueCDN := hb.Script("").Src(cdn.VueJs_3_5_32())
 
 	content := hb.Div().
-		Class("container").
-		Child(heading).
+		Class("container py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
+		Child(heading).
 		Child(vueCDN).
 		Child(hb.Raw(html)).
 		Child(hb.Script(js))

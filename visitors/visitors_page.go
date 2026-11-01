@@ -33,7 +33,7 @@ func (controller *visitorsController) renderPage(w http.ResponseWriter, r *http.
 		{Name: "Visitors", URL: ""},
 	})
 
-	heading := hb.Heading1().HTML("Visitors")
+	heading := shared.PageHeader("Visitors")
 
 	linksHelper := shared.NewLinks(controller.opts.BaseURL)
 	urlLoadVisitors := linksHelper.Visitors(map[string]string{"action": actionLoadVisitors})
@@ -56,10 +56,9 @@ func (controller *visitorsController) renderPage(w http.ResponseWriter, r *http.
 	vueCDN := hb.Script("").Src(cdn.VueJs_3_5_32())
 
 	content := hb.Div().
-		Class("container").
-		Child(heading).
+		Class("container py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
+		Child(heading).
 		Child(vueCDN).
 		Child(hb.Raw(html)).
 		Child(hb.Script(js))

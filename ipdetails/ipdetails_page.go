@@ -40,7 +40,7 @@ func (controller *ipDetailsController) renderPage(w http.ResponseWriter, r *http
 		{Name: "IP: " + ip, URL: ""},
 	})
 
-	heading := hb.Heading1().HTML("IP Details: " + ip)
+	heading := shared.PageHeader("IP Details: " + ip)
 
 	linksHelper := shared.NewLinks(controller.opts.BaseURL)
 	urlLoadPaths := linksHelper.IPDetails(map[string]string{
@@ -84,10 +84,9 @@ func (controller *ipDetailsController) renderPage(w http.ResponseWriter, r *http
 	vueCDN := hb.Script("").Src(cdn.VueJs_3_5_32())
 
 	content := hb.Div().
-		Class("container").
-		Child(heading).
+		Class("container py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
+		Child(heading).
 		Child(vueCDN).
 		Child(hb.Raw(html)).
 		Child(hb.Script(js))

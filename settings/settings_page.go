@@ -33,7 +33,7 @@ func (controller *settingsController) renderPage(w http.ResponseWriter, r *http.
 		{Name: "Settings", URL: ""},
 	})
 
-	heading := hb.Heading1().HTML("Stats Settings")
+	heading := shared.PageHeader("Stats Settings")
 
 	linksHelper := shared.NewLinks(controller.opts.BaseURL)
 	urlLoadIPs := linksHelper.Settings(map[string]string{"action": actionLoadIPs})
@@ -103,10 +103,9 @@ func (controller *settingsController) renderPage(w http.ResponseWriter, r *http.
 	vueCDN := hb.Script("").Src(cdn.VueJs_3_5_32())
 
 	content := hb.Div().
-		Class("container").
-		Child(heading).
+		Class("container py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
+		Child(heading).
 		Child(vueCDN).
 		Child(hb.Raw(html)).
 		Child(hb.Script(js))

@@ -34,7 +34,7 @@ func (controller *dashboardController) renderPage(w http.ResponseWriter, r *http
 		{Name: "Dashboard", URL: ""},
 	})
 
-	heading := hb.Heading1().HTML("Visitor Analytics")
+	heading := shared.PageHeader("Visitor Analytics")
 
 	linksHelper := shared.NewLinks(controller.opts.BaseURL)
 	urlLoadDashboard := linksHelper.Dashboard(map[string]string{"action": actionLoadDashboard})
@@ -59,10 +59,9 @@ func (controller *dashboardController) renderPage(w http.ResponseWriter, r *http
 	vueCDN := hb.Script("").Src(cdn.VueJs_3_5_32())
 
 	content := hb.Div().
-		Class("container").
-		Child(heading).
+		Class("container py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
+		Child(heading).
 		Child(vueCDN).
 		Child(hb.Raw(html)).
 		Child(hb.Script(js))
