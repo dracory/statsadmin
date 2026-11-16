@@ -579,10 +579,10 @@ createApp({
                         Notiflix.Notify.success('Found ' + total + ': all ' + unsure + ' need review');
                     }
                 } else {
-                    error.value = data.message || 'Failed to identify bots';
+                    Notiflix.Notify.failure(data.message || 'Failed to identify bots');
                 }
             } catch (e) {
-                error.value = 'Failed to identify bots';
+                Notiflix.Notify.failure('Failed to identify bots');
             } finally {
                 identifying.value = false;
             }

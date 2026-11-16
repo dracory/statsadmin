@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"slices"
 	"sort"
+	"strings"
 
 	"github.com/dracory/statsadmin/shared"
 
@@ -55,10 +56,10 @@ var consumerSpecificBotPathPatterns = []string{
 var allMaliciousPatterns = func() map[string]bool {
 	m := map[string]bool{}
 	for _, p := range botdetect.MaliciousPathPatterns() {
-		m[p] = true
+		m[strings.ToLower(p)] = true
 	}
 	for _, p := range stackDependentMaliciousPatterns {
-		m[p] = true
+		m[strings.ToLower(p)] = true
 	}
 	return m
 }()
@@ -73,6 +74,9 @@ var botPagePatterns = func() []string {
 	patterns = append(patterns, botdetect.MaliciousPathPatterns()...)
 	patterns = append(patterns, consumerSpecificBotPathPatterns...)
 	patterns = append(patterns, stackDependentMaliciousPatterns...)
+	for i, p := range patterns {
+		patterns[i] = strings.ToLower(p)
+	}
 	return patterns
 }()
 
@@ -173,10 +177,12 @@ func getExistingBotIPs(ctx context.Context, store statsstore.StoreInterface) []s
 	return ips
 }
 
-// collectBotCandidates scans the stats store for visitors whose path matches
-// any bot-page pattern, fetching all records in batches. A separate user-agent
-// scan pass checks each visitor's user agent against botdetect.IsBot().
-// IPs already in the bot list are skipped.
+// collectBotCandidates scans the stats store for bot candidates in a single
+// pass over all visitor records, fetching them in batches. For each record it
+// checks the path against every bot-page pattern (case-insensitive substring
+// match) and the user agent against botdetect.IsBot(). One pass avoids
+// running a full table scan per pattern, which previously made the endpoint
+// time out on large tables. IPs already in the bot list are skipped.
 func collectBotCandidates(ctx context.Context, store statsstore.StoreInterface, existingBots []string) map[string]*botCandidate {
 	ipAgg := map[string]*botCandidate{}
 	skipSet := map[string]bool{}
@@ -184,79 +190,44 @@ func collectBotCandidates(ctx context.Context, store statsstore.StoreInterface, 
 		skipSet[ip] = true
 	}
 
-	for _, pattern := range botPagePatterns {
-		scanPattern(ctx, store, pattern, ipAgg, skipSet)
-	}
-
-	// User-agent scan: check self-identifying bots (e.g. "SemrushBot",
-	// "Googlebot", "curl") that don't necessarily visit bot pages.
-	scanUserAgents(ctx, store, ipAgg, skipSet)
-
-	return ipAgg
-}
-
-// scanPattern processes all records for a single bot-page pattern, fetching
-// in batches of scanBatchSize.
-func scanPattern(ctx context.Context, store statsstore.StoreInterface, pattern string, ipAgg map[string]*botCandidate, skipSet map[string]bool) {
 	offset := 0
 	for {
 		query := statsstore.VisitorQuery().
-			SetPathContains(pattern).
-			SetOrderBy("created_at").
+			SetOrderBy(statsstore.COLUMN_CREATED_AT).
 			SetSortOrder("ASC").
 			SetLimit(scanBatchSize).
 			SetOffset(offset)
 
 		visitors, err := store.VisitorList(ctx, query)
 		if err != nil || len(visitors) == 0 {
-			return
+			return ipAgg
 		}
 
 		for _, v := range visitors {
 			if skipSet[v.GetIpAddress()] {
 				continue
 			}
-			mergeVisitorIntoCandidates(ipAgg, v, pattern)
-		}
 
-		if len(visitors) < scanBatchSize {
-			return
-		}
-		offset += scanBatchSize
-	}
-}
-
-// scanUserAgents fetches all visitors in batches and checks each visitor's
-// user agent string against botdetect.IsBot(). IPs whose user agent
-// self-identifies as a bot are added as candidates. This catches bots that
-// don't visit crawler pages (e.g. SemrushBot making normal page requests).
-func scanUserAgents(ctx context.Context, store statsstore.StoreInterface, ipAgg map[string]*botCandidate, skipSet map[string]bool) {
-	offset := 0
-	for {
-		query := statsstore.VisitorQuery().
-			SetOrderBy("created_at").
-			SetSortOrder("ASC").
-			SetLimit(scanBatchSize).
-			SetOffset(offset)
-
-		visitors, err := store.VisitorList(ctx, query)
-		if err != nil || len(visitors) == 0 {
-			return
-		}
-
-		for _, v := range visitors {
-			if skipSet[v.GetIpAddress()] {
-				continue
+			// Path scan: case-insensitive substring match against all
+			// bot-page patterns (same matching as handle_load_bots.go).
+			pathLower := strings.ToLower(v.GetPath())
+			for _, pattern := range botPagePatterns {
+				if strings.Contains(pathLower, pattern) {
+					mergeVisitorIntoCandidates(ipAgg, v, pattern)
+				}
 			}
+
+			// User-agent scan: check self-identifying bots (e.g.
+			// "SemrushBot", "Googlebot", "curl") that don't necessarily
+			// visit bot pages.
 			ua := v.GetUserAgent()
-			if ua == "" || !botdetect.IsBot(ua) {
-				continue
+			if ua != "" && botdetect.IsBot(ua) {
+				mergeVisitorIntoCandidates(ipAgg, v, userAgentPattern)
 			}
-			mergeVisitorIntoCandidates(ipAgg, v, userAgentPattern)
 		}
 
 		if len(visitors) < scanBatchSize {
-			return
+			return ipAgg
 		}
 		offset += scanBatchSize
 	}
