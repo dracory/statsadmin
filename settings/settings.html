@@ -171,7 +171,10 @@
                 </button>
                 <button class="btn btn-sm btn-outline-info" @click="identifyBots" :disabled="identifying">
                     <span v-if="identifying" class="spinner-border spinner-border-sm me-1"></span>
-                    <i v-else class="bi bi-search"></i> Identify Bots
+                    <i v-else class="bi bi-search"></i>
+                    <span v-if="identifying && identifyPhase === 'scan'">Scanning {{ identifyProgress }}%</span>
+                    <span v-else-if="identifying">Flagging bots…</span>
+                    <span v-else>Identify Bots</span>
                 </button>
             </div>
         </div>

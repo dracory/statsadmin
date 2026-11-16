@@ -45,8 +45,10 @@ func (controller *settingsController) Handler(w http.ResponseWriter, r *http.Req
 		return controller.handleAddBot(w, r)
 	case actionRemoveBot:
 		return controller.handleRemoveBot(w, r)
-	case actionIdentifyBots:
-		return controller.handleIdentifyBots(w, r)
+	case actionIdentifyBotsStart:
+		return controller.handleIdentifyBotsStart(w, r)
+	case actionIdentifyBotsStep:
+		return controller.handleIdentifyBotsStep(w, r)
 	case actionDeleteBots:
 		return controller.handleDeleteBots(w, r)
 	case actionDeleteThreats:

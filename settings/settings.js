@@ -35,6 +35,8 @@ createApp({
         // Identify-bots state
         const candidates = ref([]);
         const identifying = ref(false);
+        const identifyProgress = ref(0);
+        const identifyPhase = ref('');
         const deletingBots = ref(false);
         const deletingThreats = ref(false);
         const deletingOlderThan = ref(false);
@@ -552,37 +554,72 @@ createApp({
 
         const identifyBots = async () => {
             identifying.value = true;
+            identifyProgress.value = 0;
+            identifyPhase.value = 'scan';
             error.value = '';
             success.value = '';
-            try {
-                const response = await fetch(urlIdentifyBots, {
+
+            const post = async (url, body) => {
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                    body: JSON.stringify({}),
+                    body: JSON.stringify(body),
                 });
-                const data = await response.json();
-                if (data.status === 'success') {
-                    candidates.value = data.data.candidates || [];
-                    const autoAdded = data.data.auto_added_count || 0;
-                    const unsure = candidates.value.length;
-                    const total = autoAdded + unsure;
-                    if (autoAdded > 0) {
-                        await loadBots();
+                return response.json();
+            };
+
+            // Start a fresh run; on a mid-run restart (server or another
+            // tab) the step call reports `restarted` and we start over.
+            const start = async () => {
+                const data = await post(urlIdentifyBotsStart, {});
+                if (data.status !== 'success') {
+                    throw new Error(data.message || 'Failed to start bot identification');
+                }
+                return data.data.run_id;
+            };
+
+            try {
+                let runId = await start();
+                let restarts = 0;
+                let result = null;
+
+                for (;;) {
+                    const data = await post(urlIdentifyBotsStep, { run_id: runId });
+                    if (data.status !== 'success') {
+                        if (data.data && data.data.restarted && restarts < 3) {
+                            restarts++;
+                            identifyProgress.value = 0;
+                            runId = await start();
+                            continue;
+                        }
+                        throw new Error(data.message || 'Failed to identify bots');
                     }
-                    if (total === 0) {
-                        Notiflix.Notify.info('No bot candidates found in visitor logs');
-                    } else if (autoAdded > 0 && unsure > 0) {
-                        Notiflix.Notify.success('Found ' + total + ': auto-added ' + autoAdded + ', ' + unsure + ' need review');
-                    } else if (autoAdded > 0) {
-                        Notiflix.Notify.success('Found ' + total + ': all ' + autoAdded + ' auto-added (high confidence)');
-                    } else {
-                        Notiflix.Notify.success('Found ' + total + ': all ' + unsure + ' need review');
+                    identifyProgress.value = data.data.percent || 0;
+                    identifyPhase.value = data.data.phase || 'scan';
+                    if (data.data.done) {
+                        result = data.data.result || {};
+                        break;
                     }
+                }
+
+                candidates.value = result.candidates || [];
+                const autoAdded = result.auto_added_count || 0;
+                const unsure = candidates.value.length;
+                const total = autoAdded + unsure;
+                if (autoAdded > 0) {
+                    await loadBots();
+                }
+                if (total === 0) {
+                    Notiflix.Notify.info('No bot candidates found in visitor logs');
+                } else if (autoAdded > 0 && unsure > 0) {
+                    Notiflix.Notify.success('Found ' + total + ': auto-added ' + autoAdded + ', ' + unsure + ' need review');
+                } else if (autoAdded > 0) {
+                    Notiflix.Notify.success('Found ' + total + ': all ' + autoAdded + ' auto-added (high confidence)');
                 } else {
-                    Notiflix.Notify.failure(data.message || 'Failed to identify bots');
+                    Notiflix.Notify.success('Found ' + total + ': all ' + unsure + ' need review');
                 }
             } catch (e) {
-                Notiflix.Notify.failure('Failed to identify bots');
+                Notiflix.Notify.failure(e.message || 'Failed to identify bots');
             } finally {
                 identifying.value = false;
             }
@@ -714,6 +751,8 @@ createApp({
             botNextPage,
             candidates,
             identifying,
+            identifyProgress,
+            identifyPhase,
             identifyBots,
             addCandidate,
             addAllCandidates,

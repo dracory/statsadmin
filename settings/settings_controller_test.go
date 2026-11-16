@@ -212,15 +212,11 @@ func TestSettingsController_IdentifyBots_WlwManifest(t *testing.T) {
 	// Seed a visitor requesting /blog/wp-includes/wlwmanifest.xml
 	shared.SeedVisitor(t, store, "5.6.7.8", "/blog/wp-includes/wlwmanifest.xml", "US")
 
-	resp := callAction(t, opts, http.MethodPost, actionIdentifyBots, "")
+	result := runIdentifyBots(t, opts)
 
-	if resp.Status != "success" {
-		t.Fatalf("expected success, got %s: %s", resp.Status, resp.Message)
-	}
-
-	autoAdded, ok := resp.Data["auto_added"].([]interface{})
+	autoAdded, ok := result["auto_added"].([]interface{})
 	if !ok || len(autoAdded) == 0 {
-		t.Fatalf("expected 5.6.7.8 to be auto-added as a bot, got %v", resp.Data["auto_added"])
+		t.Fatalf("expected 5.6.7.8 to be auto-added as a bot, got %v", result["auto_added"])
 	}
 
 	found := false
@@ -241,15 +237,11 @@ func TestSettingsController_IdentifyBots_WordPressProbing(t *testing.T) {
 	// Seed a visitor requesting /WordPress directory probe
 	shared.SeedVisitor(t, store, "103.45.230.198", "/WordPress", "US")
 
-	resp := callAction(t, opts, http.MethodPost, actionIdentifyBots, "")
+	result := runIdentifyBots(t, opts)
 
-	if resp.Status != "success" {
-		t.Fatalf("expected success, got %s: %s", resp.Status, resp.Message)
-	}
-
-	autoAdded, ok := resp.Data["auto_added"].([]interface{})
+	autoAdded, ok := result["auto_added"].([]interface{})
 	if !ok || len(autoAdded) == 0 {
-		t.Fatalf("expected 103.45.230.198 to be auto-added as a bot, got %v", resp.Data["auto_added"])
+		t.Fatalf("expected 103.45.230.198 to be auto-added as a bot, got %v", result["auto_added"])
 	}
 
 	found := false
@@ -262,4 +254,34 @@ func TestSettingsController_IdentifyBots_WordPressProbing(t *testing.T) {
 	if !found {
 		t.Errorf("expected IP 103.45.230.198 in auto_added list, got %v", autoAdded)
 	}
+}
+
+// runIdentifyBots drives the chunked identify-bots flow (start + steps) to
+// completion and returns the final result payload.
+func runIdentifyBots(t *testing.T, opts shared.ControllerOptions) map[string]interface{} {
+	t.Helper()
+
+	resp := callAction(t, opts, http.MethodPost, actionIdentifyBotsStart, "")
+	if resp.Status != "success" {
+		t.Fatalf("identify-bots-start failed: %s", resp.Message)
+	}
+	runID, _ := resp.Data["run_id"].(string)
+	if runID == "" {
+		t.Fatalf("identify-bots-start returned no run_id: %v", resp.Data)
+	}
+
+	// Drive steps until done. Generous cap so a buggy loop fails loudly.
+	for i := 0; i < 10000; i++ {
+		body, _ := json.Marshal(map[string]string{"run_id": runID})
+		resp = callAction(t, opts, http.MethodPost, actionIdentifyBotsStep, string(body))
+		if resp.Status != "success" {
+			t.Fatalf("identify-bots-step failed: %s", resp.Message)
+		}
+		if done, _ := resp.Data["done"].(bool); done {
+			result, _ := resp.Data["result"].(map[string]interface{})
+			return result
+		}
+	}
+	t.Fatal("identify-bots did not complete within 10000 steps")
+	return nil
 }

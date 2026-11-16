@@ -18,13 +18,14 @@ const (
 	actionRemoveIncludedPath = "remove-included-path"
 
 	// Bot IP actions
-	actionLoadBots      = "load-bots"
-	actionAddBot        = "add-bot"
-	actionRemoveBot     = "remove-bot"
-	actionIdentifyBots  = "identify-bots"
-	actionDeleteBots    = "delete-bots"
-	actionDeleteThreats = "delete-threats"
-	actionLoadStats     = "load-stats"
+	actionLoadBots          = "load-bots"
+	actionAddBot            = "add-bot"
+	actionRemoveBot         = "remove-bot"
+	actionIdentifyBotsStart = "identify-bots-start"
+	actionIdentifyBotsStep  = "identify-bots-step"
+	actionDeleteBots        = "delete-bots"
+	actionDeleteThreats     = "delete-threats"
+	actionLoadStats         = "load-stats"
 
 	FieldIPs          = "ips"
 	FieldIP           = "ip"
@@ -40,6 +41,16 @@ const (
 	FieldBotIPs  = "bot_ips"
 	FieldBotIP   = "bot_ip"
 	FieldBotList = "bot_list"
+
+	// Identify-bots chunked-scan fields
+	FieldRunID     = "run_id"
+	FieldPhase     = "phase"
+	FieldScanned   = "scanned"
+	FieldPercent   = "percent"
+	FieldDone      = "done"
+	FieldFlagged   = "flagged"
+	FieldRestarted = "restarted"
+	FieldResult    = "result"
 
 	// Identify-bots response fields
 	FieldCandidates     = "candidates"
